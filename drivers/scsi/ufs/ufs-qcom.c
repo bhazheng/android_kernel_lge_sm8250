@@ -2038,7 +2038,6 @@ static void ufs_qcom_parse_lpm(struct ufs_qcom_host *host)
 
 	host->disable_lpm = of_property_read_bool(node, "qcom,disable-lpm");
 #endif
-
 	if (host->disable_lpm)
 		pr_info("%s: will disable all LPM modes\n", __func__);
 }
