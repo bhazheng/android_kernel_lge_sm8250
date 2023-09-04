@@ -33,7 +33,6 @@
 #include <linux/percpu-rwsem.h>
 #include <uapi/linux/sched/types.h>
 #include <linux/cpuset.h>
-#include <linux/random.h>
 
 #include <trace/events/power.h>
 #define CREATE_TRACE_POINTS
@@ -330,16 +329,6 @@ void lockdep_assert_cpus_held(void)
 	percpu_rwsem_assert_held(&cpu_hotplug_lock);
 }
 
-static void lockdep_acquire_cpus_lock(void)
-{
-	rwsem_acquire(&cpu_hotplug_lock.rw_sem.dep_map, 0, 0, _THIS_IP_);
-}
-
-static void lockdep_release_cpus_lock(void)
-{
-	rwsem_release(&cpu_hotplug_lock.rw_sem.dep_map, _THIS_IP_);
-}
-
 /*
  * Wait for currently running CPU hotplug operations to complete (if any) and
  * disable future CPU hotplug (from sysfs). The 'cpu_add_remove_lock' protects
@@ -369,17 +358,6 @@ void cpu_hotplug_enable(void)
 	cpu_maps_update_done();
 }
 EXPORT_SYMBOL_GPL(cpu_hotplug_enable);
-
-#else
-
-static void lockdep_acquire_cpus_lock(void)
-{
-}
-
-static void lockdep_release_cpus_lock(void)
-{
-}
-
 #endif	/* CONFIG_HOTPLUG_CPU */
 
 /*
@@ -664,12 +642,6 @@ static void cpuhp_thread_fun(unsigned int cpu)
 	 */
 	smp_mb();
 
-	/*
-	 * The BP holds the hotplug lock, but we're now running on the AP,
-	 * ensure that anybody asserting the lock is held, will actually find
-	 * it so.
-	 */
-	lockdep_acquire_cpus_lock();
 	cpuhp_lock_acquire(bringup);
 
 	if (st->single) {
@@ -715,7 +687,6 @@ static void cpuhp_thread_fun(unsigned int cpu)
 	}
 
 	cpuhp_lock_release(bringup);
-	lockdep_release_cpus_lock();
 
 	if (!st->should_run)
 		complete_ap_thread(st, bringup);
@@ -1337,7 +1308,7 @@ EXPORT_SYMBOL_GPL(cpu_up);
 #ifdef CONFIG_PM_SLEEP_SMP
 static cpumask_var_t frozen_cpus;
 
-int freeze_secondary_cpus(int primary)
+int __freeze_secondary_cpus(int primary, bool suspend)
 {
 	int cpu, error = 0;
 
@@ -1494,22 +1465,6 @@ core_initcall(cpu_hotplug_pm_sync_init);
 
 int __boot_cpu_id;
 
-/* Horrific hacks because we can't add more to cpuhp_hp_states. */
-static int random_and_perf_prepare_fusion(unsigned int cpu)
-{
-#ifdef CONFIG_PERF_EVENTS
-	perf_event_init_cpu(cpu);
-#endif
-	random_prepare_cpu(cpu);
-	return 0;
-}
-static int random_and_workqueue_online_fusion(unsigned int cpu)
-{
-	workqueue_online_cpu(cpu);
-	random_online_cpu(cpu);
-	return 0;
-}
-
 #endif /* CONFIG_SMP */
 
 /* Boot processor state steps */
@@ -1528,7 +1483,7 @@ static struct cpuhp_step cpuhp_hp_states[] = {
 	},
 	[CPUHP_PERF_PREPARE] = {
 		.name			= "perf:prepare",
-		.startup.single		= random_and_perf_prepare_fusion,
+		.startup.single		= perf_event_init_cpu,
 		.teardown.single	= perf_event_exit_cpu,
 	},
 	[CPUHP_WORKQUEUE_PREP] = {
@@ -1644,7 +1599,7 @@ static struct cpuhp_step cpuhp_hp_states[] = {
 	},
 	[CPUHP_AP_WORKQUEUE_ONLINE] = {
 		.name			= "workqueue:online",
-		.startup.single		= random_and_workqueue_online_fusion,
+		.startup.single		= workqueue_online_cpu,
 		.teardown.single	= workqueue_offline_cpu,
 	},
 	[CPUHP_AP_RCUTREE_ONLINE] = {
