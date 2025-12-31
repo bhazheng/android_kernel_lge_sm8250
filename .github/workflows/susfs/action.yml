@@ -54,9 +54,6 @@ runs:
           echo "CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG=y" >> $DEFCONFIG_PATH
           echo "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y" >> $DEFCONFIG_PATH
           echo "CONFIG_KSU_SUSFS_SUS_MAP=y" >> $DEFCONFIG_PATH
-          echo "CONFIG_KSU_MANUAL_HOOK_AUTO_INPUT_HOOK=y" >> $DEFCONFIG_PATH
-          echo "CONFIG_KSU_MANUAL_HOOK_AUTO_SETUID_HOOK=y" >> $DEFCONFIG_PATH
-          echo "CONFIG_KSU_MANUAL_HOOK_AUTO_INITRC_HOOK=y" >> $DEFCONFIG_PATH
 
           # Cek Thread Info (Logika asli Anda)
           if grep -q "THREAD_INFO_IN_TASK" "drivers/kernelsu/Kconfig"; then
