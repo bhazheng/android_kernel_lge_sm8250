@@ -1,4 +1,4 @@
-name: Build Kernel (Next Gen 2.0)
+name: Build Kernel Fix (Target Bhazheng)
 
 on:
   workflow_dispatch:
@@ -17,61 +17,128 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-    - name: Checkout source
+    - name: Checkout Source (Bhazheng)
       uses: actions/checkout@v4
       with:
+        repository: bhazheng/android_kernel_lge_sm8250
+        ref: aosp-dev
         fetch-depth: 1
 
-    - name: Install dependencies
+    - name: Install Dependencies
       run: |
         sudo apt update
-        sudo apt install -y build-essential git curl wget bison flex zip bc cpio libssl-dev ccache python-is-python3 tar
+        sudo apt install -y build-essential git curl wget bison flex zip bc cpio libssl-dev ccache python-is-python3 tar libncurses5-dev
 
     - name: Set short commit SHA
       id: vars
       run: echo "SHORT_SHA=$(echo ${GITHUB_SHA} | cut -c1-8)" >> $GITHUB_ENV
 
-    - name: Cache ccache
-      uses: actions/cache@v4
-      with:
-        path: ~/.cache/ccache_mikernel
-        # Removed the 'device' input reference since your device is fixed (LMV600)
-        key: ${{ runner.os }}-ccache-v60-${{ github.event.inputs.include_ksu }}-${{ env.SHORT_SHA }}
-        restore-keys: |
-          ${{ runner.os }}-ccache-v60-${{ github.event.inputs.include_ksu }}-
-          ${{ runner.os }}-ccache-v60-
-
-    - name: Setup zyc-clang toolchain
+    - name: Setup Toolchain
       run: |
         mkdir -p $HOME/zyc-clang
         cd $HOME/zyc-clang
-        # Using Zyc-Clang 15 (Standard for many Snapdragon 865 kernels)
-        wget https://github.com/ZyCromerZ/Clang/releases/download/15.0.7-20251111-release/Clang-15.0.7-20251111.tar.gz
-        tar -zxvf Clang-15.0.7-20251111.tar.gz
-        cd $GITHUB_WORKSPACE
+        wget -q https://github.com/ZyCromerZ/Clang/releases/download/15.0.7-20251111-release/Clang-15.0.7-20251111.tar.gz
+        tar -zxf Clang-15.0.7-20251111.tar.gz
+        rm Clang-15.0.7-20251111.tar.gz
 
-    - name: Build kernel
+    - name: Create Build Script (kernel.sh)
       run: |
-        # Exporting path for the toolchain
-        export PATH="$HOME/zyc-clang/bin:$PATH"
+        cat << 'EOF' > kernel.sh
+        #!/bin/bash
+        set -e
+
+        # --- Configuration ---
+        TOOLCHAIN_PATH=$HOME/zyc-clang/bin
+        export KBUILD_BUILD_USER="bhazheng"
+        export KBUILD_BUILD_HOST="Builder-Bot"
+        export ARCH=arm64
+        export SUBARCH=arm64
+        export PATH="$TOOLCHAIN_PATH:$PATH"
+
+        # --- PENTING: DEFCONFIG DISESUAIKAN ---
+        # Saya mengubah ke 'timelm_defconfig' karena ini standar LG V60.
+        # Jika error, coba ganti jadi 'vendor/lito_defconfig'
+        DEFCONFIG="vendor/timelm_defconfig" 
+        
+        OUT_DIR="out"
+        ANYKERNEL_DIR="anykernel"
+
+        # KSU Logic
+        KSU_ENABLE=0
+        if [ "$1" == "ksu" ]; then
+            KSU_ENABLE=1
+        fi
+
+        echo "Cleaning..."
+        rm -rf $OUT_DIR $ANYKERNEL_DIR *.zip
+
+        echo "Cloning AnyKernel3..."
+        git clone https://github.com/aqbaloch6205/AnyKernel3 -b kona --single-branch --depth=1 $ANYKERNEL_DIR
+
+        MAKE_ARGS=(
+            O="$OUT_DIR"
+            ARCH=arm64
+            CC=clang
+            CROSS_COMPILE=aarch64-linux-gnu-
+            CROSS_COMPILE_ARM32=arm-linux-gnueabi-
+            LLVM=1
+            LLVM_IAS=1
+            KCFLAGS="-Wno-error -Wno-error=incompatible-pointer-types"
+        )
+
+        echo "Generating Config: $DEFCONFIG"
+        make "${MAKE_ARGS[@]}" $DEFCONFIG
+
+        if [ $KSU_ENABLE -eq 1 ]; then
+            echo "Setting up KernelSU & SuSFS..."
+            curl -LSs "https://raw.githubusercontent.com/ApartTUSITU/SukiSU-Ultra/main/kernel/setup.sh" | bash -s ApartTUSITU
+            
+            ./scripts/config --file $OUT_DIR/.config \
+                -e KSU -e KSU_SUSFS -e KSU_SUSFS_SUS_PATH -e KSU_SUSFS_SUS_MOUNT \
+                -e KSU_SUSFS_SUS_KSTAT -e KSU_SUSFS_SPOOF_UNAME -e KSU_SUSFS_ENABLE_LOG \
+                -e KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS -e KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG \
+                -e KSU_SUSFS_OPEN_REDIRECT -e KSU_SUSFS_SUS_MAP -e THREAD_INFO_IN_TASK -e KPM
+        fi
+
+        echo "Compiling..."
+        make "${MAKE_ARGS[@]}" -j$(nproc)
+
+        if [ -f "$OUT_DIR/arch/arm64/boot/Image" ]; then
+            echo "Build Success! Packing..."
+            find $OUT_DIR/arch/arm64/boot/dts -name '*.dtb' -exec cat {} + > $OUT_DIR/arch/arm64/boot/dtb
+            
+            # KPM Patch
+            if [ $KSU_ENABLE -eq 1 ]; then
+                cd $OUT_DIR/arch/arm64/boot/
+                wget -q https://github.com/SukiSU-Ultra/SukiSU_KernelPatch_patch/releases/download/0.12.2/patch_linux
+                chmod +x patch_linux
+                ./patch_linux > /dev/null
+                rm Image && mv oImage Image
+                cd -
+            fi
+
+            cp $OUT_DIR/arch/arm64/boot/Image $ANYKERNEL_DIR/kernels/
+            cp $OUT_DIR/arch/arm64/boot/dtb $ANYKERNEL_DIR/kernels/
+            
+            cd $ANYKERNEL_DIR
+            zip -r9 "../Kernel-Result.zip" ./* -x .git .gitignore
+        else
+            echo "Build Failed!"
+            exit 1
+        fi
+        EOF
+        chmod +x kernel.sh
+
+    - name: Run Build
+      run: |
         if [ "${{ github.event.inputs.include_ksu }}" = "true" ]; then
-          # Ensure your build.sh is set up to handle the 'ksu' argument
           bash kernel.sh ksu
         else
           bash kernel.sh
         fi
 
-    - name: Show ccache stats
-      run: ccache -s
-
-    - name: Upload build artifacts
+    - name: Upload Artifacts
       uses: actions/upload-artifact@v4
       with:
-        # Dynamic naming based on whether KSU is included
-        name: LMV600${{ github.event.inputs.include_ksu == 'true' && '-KSU-SuSFS' || '-SuSFS' }}-Kernel
-        path: |
-          *.zip
-          out/arch/arm64/boot/Image*
-          out/arch/arm64/boot/dtb*
-          out/arch/arm64/boot/dts/vendor/*.dtb
-          
+        name: Kernel-Result-${{ github.event.inputs.include_ksu }}
+        path: Kernel-Result.zip
