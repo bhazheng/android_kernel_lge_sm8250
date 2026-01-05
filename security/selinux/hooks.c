@@ -2703,7 +2703,6 @@ out_bad_option:
 
 static int selinux_sb_kern_mount(struct super_block *sb)
 {
-	char *options = data;
 	const struct cred *cred = current_cred();
 	struct common_audit_data ad;
 
