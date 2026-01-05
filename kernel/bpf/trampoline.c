@@ -39,7 +39,6 @@ void *bpf_jit_alloc_exec_page(void)
 	 * everytime new program is attached or detached.
 	 */
 	set_memory_x((long)image, 1);
-	trace_android_vh_set_memory_x((unsigned long)image, 1);
 	return image;
 }
 
@@ -161,7 +160,7 @@ static void __bpf_tramp_image_put_deferred(struct work_struct *work)
 
 	im = container_of(work, struct bpf_tramp_image, work);
 	bpf_image_ksym_del(&im->ksym);
-	trace_android_vh_set_memory_nx((unsigned long)im->image, 1);
+	set_memory_nx((unsigned long)image, 1);
 	bpf_jit_free_exec(im->image);
 	bpf_jit_uncharge_modmem(1);
 	percpu_ref_exit(&im->pcref);
