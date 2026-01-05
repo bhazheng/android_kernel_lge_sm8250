@@ -35,7 +35,6 @@
 #include <linux/nospec.h>
 
 #include <asm/barrier.h>
-#include <linux/log2.h>
 #include <asm/unaligned.h>
 
 #include <trace/hooks/memory.h>
@@ -914,9 +913,8 @@ bpf_jit_binary_alloc(unsigned int proglen, u8 **image_ptr,
 void bpf_jit_binary_free(struct bpf_binary_header *hdr)
 {
 	u32 pages = hdr->pages;
-
-	trace_android_vh_set_memory_rw((unsigned long)hdr, pages);
-	trace_android_vh_set_memory_nx((unsigned long)hdr, pages);
+	set_memory_rw((unsigned long)header, header->pages);
+	set_memory_nx((unsigned long)header, header->pages);
 	bpf_jit_free_exec(hdr);
 	bpf_jit_uncharge_modmem(pages);
 }
