@@ -10,7 +10,7 @@ export SUBARCH=arm64
 export PATH="$TOOLCHAIN_PATH:$PATH"
 
 GIT_COMMIT_ID=$(git rev-parse --short=8 HEAD)
-DEFCONFIG="vendor/JhatPat_defconfig"
+DEFCONFIG="vendor/arabella_defconfig"
 OUT_DIR="out"
 ANYKERNEL_DIR="anykernel"
 
@@ -107,7 +107,7 @@ if [ -f "$OUT_DIR/arch/arm64/boot/Image" ]; then
 
     # Create Flashable Zip
     cd $ANYKERNEL_DIR
-    ZIP_NAME="Jhat-Pat-V60-${KSU_ZIP_STR}-$(date +%Y%m%d)-${GIT_COMMIT_ID}.zip"
+    ZIP_NAME="Arabella-V60-${KSU_ZIP_STR}-$(date +%Y%m%d)-${GIT_COMMIT_ID}.zip"
     zip -r9 "../$ZIP_NAME" ./* -x .git .gitignore out/
     cd ..
     
