@@ -1,4 +1,4 @@
-name: Build Jhat-Pat Kernel (Next Gen 2.0)
+name: Build arabella aosp Kernel
 
 on:
   workflow_dispatch:
