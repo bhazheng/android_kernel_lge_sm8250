@@ -2,7 +2,7 @@
 set -e
 
 # --- Configuration ---
-TOOLCHAIN_PATH=$HOME/zyc-clang/bin
+TOOLCHAIN_PATH=$HOME/clang/bin
 export KBUILD_BUILD_USER="bhazheng "
 export KBUILD_BUILD_HOST="Akbar-Lucky"
 export ARCH=arm64
@@ -55,7 +55,7 @@ make "${MAKE_ARGS[@]}" $DEFCONFIG
 if [ $KSU_ENABLE -eq 1 ]; then
     echo "KSU is enabled"
     # Exact Xiaomi dev trick: pulling the remote setup logic
-    curl -LSs "https://raw.githubusercontent.com/ApartTUSITU/SukiSU-Ultra/main/kernel/setup.sh" | bash -s ApartTUSITU
+    curl -LSs "https://raw.githubusercontent.com/ReSukiSU/ReSukiSU/main/kernel/setup.sh" | bash -s builtin
     
     echo "Applying SuSFS v2.0.0 Configs..."
     ./scripts/config --file $OUT_DIR/.config \
@@ -86,7 +86,7 @@ if [ -f "$OUT_DIR/arch/arm64/boot/Image" ]; then
     
     # Merge DTBs
     echo "Merging DTBs..."
-    find $OUT_DIR/arch/arm64/boot/dts -name '*.dtb' -exec cat {} + > $OUT_DIR/arch/arm64/boot/dtb
+    find $OUT_DIR/arch/arm64/boot/dts -name '*.dtb' | sort | xargs cat > $OUT_DIR/arch/arm64/boot/dtb
 
     # KPM Support Patch (Xiaomi Dev Method)
     if [ $KSU_ENABLE -eq 1 ]; then

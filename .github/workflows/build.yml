@@ -12,6 +12,32 @@ on:
           - 'true'
           - 'false'
 
+env:
+  # --- CONFIGURATION (YOU MUST EDIT THESE) ---
+  KERNEL_ARCH: "arm64"
+  KERNEL_VERSION: "4.19"             # ⚠️ Change this to your actual kernel version (e.g., 4.14, 4.19, 5.4)
+  DEFCONFIG_NAME: "vendor/arabella_defconfig" # ⚠️ Change to your actual defconfig path relative to arch/arm64/configs/
+  
+  # --- SUSFS CONFIGURATION ---
+  SUSFS_ENABLE: "true"
+  SUSFS_FIXED: "true"
+  # SUSFS_VERSION: "v1.5.5"
+  
+  # --- PATCH SOURCE (JackA1ltman) ---
+  PATCHES_SOURCE: "JackA1ltman/NonGKI_Kernel_Build_2nd"
+  PATCHES_BRANCH: "mainline"
+
+  # --- KPROBE/BACKPORT CONFIGURATION ---
+  # Adjust these versions to match your kernel (e.g., if 4.19, First=4, Second=19)
+  FIRST_VERSION: "4"
+  SECOND_VERSION: "19"
+  HOOK_METHOD: "syscall"
+  KERNEL_PATCH: "false"
+  
+  # --- DEBUGGING ---
+  BUILD_DEBUGGER: "true"
+  SKIP_PATCH: "true"
+
 jobs:
   build:
     runs-on: ubuntu-22.04
@@ -22,6 +48,13 @@ jobs:
       with:
         fetch-depth: 1
 
+    # [TRICK] Create Symlink for compatibility
+    # Your actions expect the kernel to be in 'device_kernel', but here it IS the root.
+    # We create a link so 'cd device_kernel' leads back to '.'
+    - name: Simulate device_kernel directory
+      run: |
+        ln -s . device_kernel
+
     - name: Install dependencies
       run: |
         sudo apt update
@@ -31,31 +64,59 @@ jobs:
       id: vars
       run: echo "SHORT_SHA=$(echo ${GITHUB_SHA} | cut -c1-8)" >> $GITHUB_ENV
 
+    # [NEW] Prepare Patches for KProbe/SuSFS
+    - name: Prepare /tmp/Patches
+      run: |
+        echo "Cloning Patch Repository..."
+        git clone https://github.com/${{ env.PATCHES_SOURCE }} -b ${{ env.PATCHES_BRANCH }} temp_patches
+        
+        # Move the 'Patches' folder contents to /tmp/Patches
+        mkdir -p /tmp/Patches
+        cp -r temp_patches/Patches/* /tmp/Patches/
+        
+        echo "Verifying patch files..."
+        ls -R /tmp/Patches
+        rm -rf temp_patches
+
+    # [NEW] Run SuSFS Patching
+    - name: Patch SuSFS
+      uses: ./.github/workflows/susfs
+
+    # [NEW] Run KProbe/Backport Patching
+    - name: Patch KProbe/Backport
+      uses: ./.github/workflows/kprobe
+
+    # [NEW] Upload Debug Logs if Patching Fails
+    - name: Upload Patch Debug Rejects
+      if: failure() || env.BUILD_DEBUGGER == 'true'
+      uses: actions/upload-artifact@v4
+      with:
+        name: patch-reject-files
+        path: |
+          *.rej
+          rej_files_*.tar.gz
+
     - name: Cache ccache
       uses: actions/cache@v4
       with:
         path: ~/.cache/ccache_mikernel
-        # Removed the 'device' input reference since your device is fixed (LMV600)
         key: ${{ runner.os }}-ccache-v60-${{ github.event.inputs.include_ksu }}-${{ env.SHORT_SHA }}
         restore-keys: |
           ${{ runner.os }}-ccache-v60-${{ github.event.inputs.include_ksu }}-
           ${{ runner.os }}-ccache-v60-
 
-    - name: Setup zyc-clang toolchain
+    - name: Setup google clang toolchain
       run: |
-        mkdir -p $HOME/zyc-clang
-        cd $HOME/zyc-clang
-        # Using Zyc-Clang 15 (Standard for many Snapdragon 865 kernels)
-        wget https://github.com/ZyCromerZ/Clang/releases/download/15.0.7-20251111-release/Clang-15.0.7-20251111.tar.gz
-        tar -zxvf Clang-15.0.7-20251111.tar.gz
+        mkdir -p $HOME/clang
+        cd $HOME/clang
+        wget https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/clang-r547379.tar.gz
+        tar -zxvf clang-r547379.tar.gz
         cd $GITHUB_WORKSPACE
 
     - name: Build kernel
       run: |
-        # Exporting path for the toolchain
-        export PATH="$HOME/zyc-clang/bin:$PATH"
+        export PATH="$HOME/clang/bin:$PATH"
         if [ "${{ github.event.inputs.include_ksu }}" = "true" ]; then
-          # Ensure your build.sh is set up to handle the 'ksu' argument
           bash kernel.sh ksu
         else
           bash kernel.sh
@@ -67,11 +128,9 @@ jobs:
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
-        # Dynamic naming based on whether KSU is included
         name: LMV600${{ github.event.inputs.include_ksu == 'true' && '-KSU-SuSFS' || '-SuSFS' }}-Kernel
         path: |
           *.zip
           out/arch/arm64/boot/Image*
           out/arch/arm64/boot/dtb*
           out/arch/arm64/boot/dts/vendor/*.dtb
-          
