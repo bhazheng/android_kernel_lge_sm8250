@@ -64,6 +64,47 @@ jobs:
       id: vars
       run: echo "SHORT_SHA=$(echo ${GITHUB_SHA} | cut -c1-8)" >> $GITHUB_ENV
 
+    - name: Setup google clang toolchain
+      run: |
+        mkdir -p $HOME/clang
+        cd $HOME/clang
+        wget https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/clang-r547379.tar.gz
+        tar -zxvf clang-r547379.tar.gz
+        cd $GITHUB_WORKSPACE
+
+    # 2. Generate Base Config (Membuat .config awal)
+    - name: Generate Base Config
+      run: |
+        export PATH="$HOME/clang/bin:$PATH"
+        args="O=out ARCH=arm64 CC=clang CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- LLVM=1 LLVM_IAS=1"
+        mkdir -p out
+        # Ganti dengan defconfig target Anda
+        make $args vendor/arabella_defconfig
+
+    # 3. Inject SuSFS & KSU Configs (Logika Xiaomi Dev Method)
+    - name: Inject SuSFS & KSU Configs
+      if: github.event.inputs.include_ksu == 'true'
+      run: |
+        echo "KSU enabled: Injecting configuration..."
+        # Install Driver KSU
+        curl -LSs "https://raw.githubusercontent.com/ReSukiSU/ReSukiSU/main/kernel/setup.sh" | bash -s builtin
+        
+        # Inject Configs ke out/.config secara manual
+        ./scripts/config --file out/.config \
+            -e KSU \
+            -e KSU_SUSFS \
+            -e KSU_SUSFS_SUS_PATH \
+            -e KSU_SUSFS_SUS_MOUNT \
+            -e KSU_SUSFS_SUS_KSTAT \
+            -e KSU_SUSFS_SPOOF_UNAME \
+            -e KSU_SUSFS_ENABLE_LOG \
+            -e KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS \
+            -e KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG \
+            -e KSU_SUSFS_OPEN_REDIRECT \
+            -e KSU_SUSFS_SUS_MAP \
+            -e THREAD_INFO_IN_TASK \
+            -e KPM
+
     # [NEW] Prepare Patches for KProbe/SuSFS
     - name: Prepare /tmp/Patches
       run: |
@@ -104,14 +145,6 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-ccache-v60-${{ github.event.inputs.include_ksu }}-
           ${{ runner.os }}-ccache-v60-
-
-    - name: Setup google clang toolchain
-      run: |
-        mkdir -p $HOME/clang
-        cd $HOME/clang
-        wget https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/clang-r547379.tar.gz
-        tar -zxvf clang-r547379.tar.gz
-        cd $GITHUB_WORKSPACE
 
     - name: Build kernel
       run: |
