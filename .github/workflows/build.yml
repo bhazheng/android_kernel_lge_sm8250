@@ -48,9 +48,6 @@ jobs:
       with:
         fetch-depth: 1
 
-    # [TRICK] Create Symlink for compatibility
-    # Your actions expect the kernel to be in 'device_kernel', but here it IS the root.
-    # We create a link so 'cd device_kernel' leads back to '.'
     - name: Simulate device_kernel directory
       run: |
         ln -s . device_kernel
@@ -64,70 +61,57 @@ jobs:
       id: vars
       run: echo "SHORT_SHA=$(echo ${GITHUB_SHA} | cut -c1-8)" >> $GITHUB_ENV
 
+    # [OPTIMASI 1] Set PATH secara global di sini, jadi tidak perlu export berulang kali
     - name: Setup google clang toolchain
       run: |
         mkdir -p $HOME/clang
         cd $HOME/clang
         wget https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/clang-r547379.tar.gz
         tar -zxvf clang-r547379.tar.gz
+        echo "$HOME/clang/bin" >> $GITHUB_PATH 
         cd $GITHUB_WORKSPACE
 
-    # 2. Generate Base Config (Membuat .config awal)
-    - name: Generate Base Config
-      run: |
-        export PATH="$HOME/clang/bin:$PATH"
-        args="O=out ARCH=arm64 CC=clang CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- LLVM=1 LLVM_IAS=1"
-        mkdir -p out
-        # Ganti dengan defconfig target Anda
-        make $args vendor/arabella_defconfig
-
-    # 3. Inject SuSFS & KSU Configs (Logika Xiaomi Dev Method)
-    - name: Inject SuSFS & KSU Configs
-      if: github.event.inputs.include_ksu == 'true'
-      run: |
-        echo "KSU enabled: Injecting configuration..."
-        # Install Driver KSU
-        curl -LSs "https://raw.githubusercontent.com/ReSukiSU/ReSukiSU/main/kernel/setup.sh" | bash -s builtin
-        
-        # Inject Configs ke out/.config secara manual
-        ./scripts/config --file out/.config \
-            -e KSU \
-            -e KSU_SUSFS \
-            -e KSU_SUSFS_SUS_PATH \
-            -e KSU_SUSFS_SUS_MOUNT \
-            -e KSU_SUSFS_SUS_KSTAT \
-            -e KSU_SUSFS_SPOOF_UNAME \
-            -e KSU_SUSFS_ENABLE_LOG \
-            -e KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS \
-            -e KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG \
-            -e KSU_SUSFS_OPEN_REDIRECT \
-            -e KSU_SUSFS_SUS_MAP \
-            -e THREAD_INFO_IN_TASK \
-            -e KPM
-
-    # [NEW] Prepare Patches for KProbe/SuSFS
+    # [OPTIMASI 2] Pindahkan Prepare Patches ke ATAS (Sebelum Generate Config)
     - name: Prepare /tmp/Patches
       run: |
         echo "Cloning Patch Repository..."
         git clone https://github.com/${{ env.PATCHES_SOURCE }} -b ${{ env.PATCHES_BRANCH }} temp_patches
-        
-        # Move the 'Patches' folder contents to /tmp/Patches
         mkdir -p /tmp/Patches
         cp -r temp_patches/Patches/* /tmp/Patches/
-        
-        echo "Verifying patch files..."
-        ls -R /tmp/Patches
         rm -rf temp_patches
 
-    # [NEW] Run SuSFS Patching
+    # [OPTIMASI 3] Jalankan Patching DULUAN (Modifikasi Source & Defconfig)
     - name: Patch SuSFS
       uses: ./.github/workflows/susfs
 
-    # [NEW] Run KProbe/Backport Patching
     - name: Patch KProbe/Backport
       uses: ./.github/workflows/kprobe
 
-    # [NEW] Upload Debug Logs if Patching Fails
+    # [OPTIMASI 4] Generate Config SETELAH Patching
+    # Karena dilakukan setelah patching, ia otomatis mengambil config SuSFS dari action.yml
+    - name: Generate Base Config
+      run: |
+        args="O=out ARCH=arm64 CC=clang CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- LLVM=1 LLVM_IAS=1"
+        mkdir -p out
+        make $args vendor/arabella_defconfig
+
+    # [DIBERSIHKAN] Inject Configs (Hanya sisa KSU Core & Setup)
+    # Config SuSFS (sus_path, sus_mount, dll) sudah dihapus karena ditangani action.yml
+    - name: Inject KSU Configs
+      if: github.event.inputs.include_ksu == 'true'
+      run: |
+        echo "KSU enabled: Installing headers and enabling core KSU..."
+        
+        # Install Driver KSU (Tetap Wajib)
+        curl -LSs "https://raw.githubusercontent.com/ReSukiSU/ReSukiSU/main/kernel/setup.sh" | bash -s builtin
+        
+        # Kita hanya perlu enable KSU utama.
+        # Config SuSFS lainnya sudah masuk lewat 'make defconfig' di atas.
+        ./scripts/config --file out/.config \
+            -e KSU \
+            -e THREAD_INFO_IN_TASK \
+            -e KPM
+
     - name: Upload Patch Debug Rejects
       if: failure() || env.BUILD_DEBUGGER == 'true'
       uses: actions/upload-artifact@v4
@@ -148,7 +132,7 @@ jobs:
 
     - name: Build kernel
       run: |
-        export PATH="$HOME/clang/bin:$PATH"
+        # Export PATH tidak perlu lagi karena sudah di GITHUB_PATH
         if [ "${{ github.event.inputs.include_ksu }}" = "true" ]; then
           bash kernel.sh ksu
         else
