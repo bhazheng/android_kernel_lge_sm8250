@@ -91,3 +91,10 @@ if [ -f "$OUT_DIR/arch/arm64/boot/Image" ]; then
     cd $ANYKERNEL_DIR
     ZIP_NAME="Arabella-V60-${KSU_ZIP_STR}-$(date +%Y%m%d)-${GIT_COMMIT_ID}.zip"
     zip -r9 "../$ZIP_NAME" ./* -x .git .gitignore out/
+    cd ..
+    
+    echo "Build Complete: $ZIP_NAME"
+else
+    echo "Build Failed: Image not found."
+    exit 1
+fi
