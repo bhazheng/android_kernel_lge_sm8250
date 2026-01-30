@@ -477,6 +477,8 @@ static void do_input_boost_multi_step(struct work_struct *work)
 	schedule_delayed_work(&input_boost_rem, msecs_to_jiffies(input_boost_ms));
 }
 
+#endif /* CONFIG_SCHED_MULTI_STEP_BOOST */
+
 static void cpuboost_input_event(struct input_handle *handle,
 		unsigned int type, unsigned int code, int value)
 {
