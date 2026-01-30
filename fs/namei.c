@@ -60,7 +60,6 @@ extern bool susfs_is_base_dentry_sdcard_dir(struct dentry* base);
 extern const struct qstr susfs_fake_qstr_name;
 #endif
 
-
 /* [Feb-1997 T. Schoebel-Theuer]
  * Fundamental changes in the pathname lookup mechanisms (namei)
  * were necessary because of omirr.  The reason is that omirr needs
@@ -519,7 +518,6 @@ struct nameidata {
 	struct qstr	last;
 	struct path	root;
 	struct inode	*inode; /* path.dentry.d_inode */
-
 	unsigned int	flags;
 #ifdef CONFIG_KSU_SUSFS_SUS_PATH
 	unsigned int	state;
@@ -553,7 +551,6 @@ static void set_nameidata(struct nameidata *p, int dfd, struct filename *name)
 #ifdef CONFIG_KSU_SUSFS_SUS_PATH
 	p->state = 0;
 #endif
-
 }
 
 static void restore_nameidata(void)
@@ -1163,7 +1160,6 @@ static int may_create_in_sticky(umode_t dir_mode, kuid_t dir_uid,
 	}
 #endif
 
-
 	if ((!sysctl_protected_fifos && S_ISFIFO(inode->i_mode)) ||
 	    (!sysctl_protected_regular && S_ISREG(inode->i_mode)) ||
 	    likely(!(dir_mode & S_ISVTX)) ||
@@ -1719,7 +1715,6 @@ retry:
 #ifdef CONFIG_KSU_SUSFS_SUS_PATH
 skip_orig_flow:
 #endif
-
 	if (unlikely(!dentry))
 		return ERR_PTR(-ENOMEM);
 

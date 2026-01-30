@@ -26,7 +26,6 @@ obj-$(CONFIG_LGE_READAHEAD_FROM_BOOT_PROFILING) += sreadahead_prof.o
 
 obj-$(CONFIG_KSU_SUSFS) += susfs.o
 
-
 ifeq ($(CONFIG_BLOCK),y)
 obj-y +=	buffer.o block_dev.o direct-io.o mpage.o
 else

@@ -21,14 +21,12 @@
 #include <linux/susfs_def.h>
 #endif
 
-
 #include <linux/uaccess.h>
 #include <asm/unistd.h>
 
 #ifdef CONFIG_KSU_SUSFS_SUS_KSTAT
 extern void susfs_sus_ino_for_generic_fillattr(unsigned long ino, struct kstat *stat);
 #endif
-
 
 /**
  * generic_fillattr - Fill in the basic attributes from the inode struct
@@ -52,7 +50,6 @@ void generic_fillattr(struct inode *inode, struct kstat *stat)
 		return;
 	}
 #endif
-
 	stat->dev = inode->i_sb->s_dev;
 	stat->ino = inode->i_ino;
 	stat->mode = inode->i_mode;

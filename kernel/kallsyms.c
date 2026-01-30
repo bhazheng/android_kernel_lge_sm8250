@@ -637,7 +637,6 @@ static void s_stop(struct seq_file *m, void *p)
 extern bool susfs_starts_with(const char *str, const char *prefix);
 #endif
 
-
 static int s_show(struct seq_file *m, void *p)
 {
 	void *value;
@@ -687,13 +686,12 @@ static int s_show(struct seq_file *m, void *p)
 		{
 			return 0;
 		}
-		seq_printf(m, "%px %c %s\n", value,
-			   iter->type, iter->name);
+ 		seq_printf(m, "%px %c %s\n", value,
+ 			   iter->type, iter->name);
 	}
 #endif
 	return 0;
 }
-
 
 static const struct seq_operations kallsyms_op = {
 	.start = s_start,
