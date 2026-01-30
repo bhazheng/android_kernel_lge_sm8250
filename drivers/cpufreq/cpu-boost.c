@@ -475,6 +475,8 @@ static void do_input_boost_multi_step(struct work_struct *work)
 
 #endif /* CONFIG_SCHED_MULTI_STEP_BOOST */
 
+#endif /* CONFIG_SCHED_MULTI_STEP_BOOST */
+
 static void cpuboost_input_event(struct input_handle *handle,
 		unsigned int type, unsigned int code, int value)
 {
