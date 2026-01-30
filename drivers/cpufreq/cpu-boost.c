@@ -365,7 +365,7 @@ static void do_input_boost_rem(struct work_struct *work)
 #endif /* CONFIG_SCHED_MULTI_STEP_BOOST */
 
 #ifdef CONFIG_SCHED_CAS
-	queue_delayed_work(cpu_boost_wq, &input_schedtune_boost,
+	queue_delayed_work(cpu_boost_worker_thread, &input_schedtune_boost,
 					msecs_to_jiffies(input_schedtune_boost_ms));
 #endif /* CONFIG_SCHED_CAS */
 
@@ -496,7 +496,7 @@ static void cpuboost_input_event(struct input_handle *handle,
 		if (work_pending(&input_boost_multi_step_work))
 			return;
 
-		queue_work(cpu_boost_wq, &input_boost_multi_step_work);
+		queue_work(cpu_boost_worker_thread, &input_boost_multi_step_work);
 		last_input_time = ktime_to_us(ktime_get());
 		return;
 	}
