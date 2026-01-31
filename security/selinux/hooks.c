@@ -2212,24 +2212,20 @@ static u32 ptrace_parent_sid(void)
 
 	return sid;
 }
+#ifdef CONFIG_KSU_MANUAL_HOOK
+extern bool is_ksu_transition(const struct task_security_struct *old_tsec, 
+				const struct task_security_struct *new_tsec);
+#endif
 
 static int check_nnp_nosuid(const struct linux_binprm *bprm,
 			    const struct task_security_struct *old_tsec,
 			    const struct task_security_struct *new_tsec)
 {
-#ifdef CONFIG_KSU
-    static u32 ksu_sid;
-    char *secdata;
-#endif
 	int nnp = (bprm->unsafe & LSM_UNSAFE_NO_NEW_PRIVS);
 	int nosuid = !mnt_may_suid(bprm->file->f_path.mnt);
 	int rc;
 	u32 av;
 
-#ifdef CONFIG_KSU
-    int error;
-    u32 seclen;
-#endif
 	if (!nnp && !nosuid)
 		return 0; /* neither NNP nor nosuid */
 
