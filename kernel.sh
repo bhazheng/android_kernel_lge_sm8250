@@ -15,7 +15,7 @@ OUT_DIR="out"
 ANYKERNEL_DIR="anykernel"
 
 # Determine if KSU is enabled (Hanya untuk penamaan file ZIP dan KPM Patch)
-KSU_ENABLE=0
+KSU_ENABLE=1
 KSU_ZIP_STR="NoKSU"
 if [ "$1" == "ksu" ]; then
     KSU_ENABLE=1
@@ -49,17 +49,20 @@ MAKE_ARGS=(
     KCFLAGS="-Wno-error -Wno-error=incompatible-pointer-types"
 )
 
+echo "Building for AOSP......"
+make $MAKE_ARGS ${TARGET_DEVICE}_defconfig
+
 # 2. Inject SuSFS v2.0.0 & KSU Configs (Xiaomi Dev Method)
 if [ $KSU_ENABLE -eq 1 ]; then
     echo "KSU is enabled"
     # Exact Xiaomi dev trick: pulling the remote setup logic
     curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s builtin
-    
-    echo "Applying SuSFS v2.0.0 Configs..."
-    ./scripts/config --file $OUT_DIR/.config \
           # echo "CONFIG_KSU_MANUAL_HOOK_AUTO_INPUT_HOOK=y" >> $DEFCONFIG_PATH
           # echo "CONFIG_KSU_MANUAL_HOOK_AUTO_SETUID_HOOK=y" >> $DEFCONFIG_PATH
           # echo "CONFIG_KSU_MANUAL_HOOK_AUTO_INITRC_HOOK=y" >> $DEFCONFIG_PATH
+    
+    echo "Applying SuSFS v2.0.0 Configs..."
+    ./scripts/config --file $OUT_DIR/.config \
         -e KSU \
         -e KSU_SUSFS \
         -e KSU_MANUAL_HOOK \
