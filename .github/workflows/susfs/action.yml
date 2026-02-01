@@ -31,7 +31,8 @@ runs:
           
           # 1. Install Driver KSU (Pindahan dari build.yml)
           echo "[+] Installing KSU Drivers (ReSukiSU)..."
-          curl -LSs "https://raw.githubusercontent.com/ReSukiSU/ReSukiSU/main/kernel/setup.sh" | bash -s builtin
+          
+          curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s builtin
 
           # 2. Inject Configs ke DEFCONFIG (Bukan .config)
           echo "[+] Injecting KSU & SuSFS config to ${{ env.DEFCONFIG_NAME }}..."
