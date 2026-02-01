@@ -32,37 +32,37 @@ runs:
           # 1. Install Driver KSU (Pindahan dari build.yml)
           echo "[+] Installing KSU Drivers (ReSukiSU)..."
           
-          curl -LSs "https://raw.githubusercontent.com/ReSukiSU/ReSukiSU/main/kernel/setup.sh" | bash -s builtin
+          curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s builtin
 
           # 2. Inject Configs ke DEFCONFIG (Bukan .config)
           echo "[+] Injecting KSU & SuSFS config to ${{ env.DEFCONFIG_NAME }}..."
           
           DEFCONFIG_PATH="./arch/${{ env.KERNEL_ARCH }}/configs/${{ env.DEFCONFIG_NAME }}"
           
-          # Config KSU Core (Pindahan dari build.yml)
-          echo "CONFIG_KSU=y" >> $DEFCONFIG_PATH
-          echo "CONFIG_KPM=y" >> $DEFCONFIG_PATH
-          echo "CONFIG_KSU_MANUAL_HOOK=y" >> $DEFCONFIG_PATH
-          # echo "CONFIG_KSU_MANUAL_HOOK_AUTO_INPUT_HOOK=y" >> $DEFCONFIG_PATH
+#          # Config KSU Core (Pindahan dari build.yml)
+      #    echo "CONFIG_KSU=y" >> $DEFCONFIG_PATH
+      #    echo "CONFIG_KPM=y" >> $DEFCONFIG_PATH
+        #  echo "CONFIG_KSU_MANUAL_HOOK=y" >> $DEFCONFIG_PATH
+       #   # echo "CONFIG_KSU_MANUAL_HOOK_AUTO_INPUT_HOOK=y" >> $DEFCONFIG_PATH
           # echo "CONFIG_KSU_MANUAL_HOOK_AUTO_SETUID_HOOK=y" >> $DEFCONFIG_PATH
-          # echo "CONFIG_KSU_MANUAL_HOOK_AUTO_INITRC_HOOK=y" >> $DEFCONFIG_PATH
+    #      # echo "CONFIG_KSU_MANUAL_HOOK_AUTO_INITRC_HOOK=y" >> $DEFCONFIG_PATH
 
-          echo "CONFIG_KALLSYMS=y" >> $DEFCONFIG_PATH
-          echo "CONFIG_KALLSYMS_ALL=y" >> $DEFCONFIG_PATH
+       #   echo "CONFIG_KALLSYMS=y" >> $DEFCONFIG_PATH
+      #    echo "CONFIG_KALLSYMS_ALL=y" >> $DEFCONFIG_PATH
 
           # Config SuSFS
-          echo "CONFIG_KSU_SUSFS=y" >> $DEFCONFIG_PATH
-          echo "CONFIG_KSU_SUSFS_SUS_PATH=y" >> $DEFCONFIG_PATH
-          echo "CONFIG_KSU_SUSFS_SUS_MOUNT=y" >> $DEFCONFIG_PATH
-          echo "CONFIG_KSU_SUSFS_SUS_KSTAT=y" >> $DEFCONFIG_PATH
-          echo "CONFIG_KSU_SUSFS_SPOOF_UNAME=y" >> $DEFCONFIG_PATH
-          echo "CONFIG_KSU_SUSFS_ENABLE_LOG=y" >> $DEFCONFIG_PATH
-          echo "CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS=y" >> $DEFCONFIG_PATH
-          echo "CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG=y" >> $DEFCONFIG_PATH
-          echo "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y" >> $DEFCONFIG_PATH
-          echo "CONFIG_KSU_SUSFS_SUS_MAP=y" >> $DEFCONFIG_PATH
+      #    echo "CONFIG_KSU_SUSFS=y" >> $DEFCONFIG_PATH
+        #  echo "CONFIG_KSU_SUSFS_SUS_PATH=y" >> $DEFCONFIG_PATH
+       #   echo "CONFIG_KSU_SUSFS_SUS_MOUNT=y" >> $DEFCONFIG_PATH
+     #     echo "CONFIG_KSU_SUSFS_SUS_KSTAT=y" >> $DEFCONFIG_PATH
+       #   echo "CONFIG_KSU_SUSFS_SPOOF_UNAME=y" >> $DEFCONFIG_PATH
+#          echo "CONFIG_KSU_SUSFS_ENABLE_LOG=y" >> $DEFCONFIG_PATH
+      #    echo "CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS=y" >> $DEFCONFIG_PATH
+      #    echo "CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG=y" >> $DEFCONFIG_PATH
+       #   echo "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y" >> $DEFCONFIG_PATH
+      #    echo "CONFIG_KSU_SUSFS_SUS_MAP=y" >> $DEFCONFIG_PATH
 
-          echo "CONFIG_THREAD_INFO_IN_TASK=y" >> $DEFCONFIG_PATH
+       #   echo "CONFIG_THREAD_INFO_IN_TASK=y" >> $DEFCONFIG_PATH
 
 
       - name: Patch SuSFS
