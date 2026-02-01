@@ -11,6 +11,7 @@ export SUBARCH=arm64
 export PATH="$TOOLCHAIN_PATH:$PATH"
 
 GIT_COMMIT_ID=$(git rev-parse --short=8 HEAD)
+DEFCONFIG="vendor/arabella_defconfig"
 OUT_DIR="out"
 ANYKERNEL_DIR="anykernel"
 
@@ -49,8 +50,8 @@ MAKE_ARGS=(
     KCFLAGS="-Wno-error -Wno-error=incompatible-pointer-types"
 )
 
-echo "Building for AOSP......"
-make $MAKE_ARGS ${TARGET_DEVICE}_defconfig
+# 1. Generate Base Config
+make "${MAKE_ARGS[@]}" $DEFCONFIG
 
 # 2. Inject SuSFS v2.0.0 & KSU Configs (Xiaomi Dev Method)
 if [ $KSU_ENABLE -eq 1 ]; then
