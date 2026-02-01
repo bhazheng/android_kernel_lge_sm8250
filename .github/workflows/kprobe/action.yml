@@ -117,7 +117,11 @@ runs:
           # Check syscall hook
           elif [[ ${{ env.HOOK_METHOD }} == "syscall" ]]; then
             # Core
- 
+            cp /tmp/Patches/syscall_hook_patches.sh ./
+            bash syscall_hook_patches.sh ./
+
+            echo "[+] executed syscall hook successfully."
+
             if [[ ${{ env.FIRST_VERSION }} -le 4 ]] && [[ ${{ env.SECOND_VERSION }} -le 9 ]]; then
                 cp /tmp/Patches/backport_patches.sh ./
 
