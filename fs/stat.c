@@ -28,6 +28,11 @@
 extern void susfs_sus_ino_for_generic_fillattr(unsigned long ino, struct kstat *stat);
 #endif
 
+#ifdef CONFIG_KSU_SUSFS
+extern bool ksu_init_rc_hook __read_mostly;
+extern void ksu_handle_vfs_fstat(int fd, loff_t *kstat_size_ptr);
+#endif
+
 /**
  * generic_fillattr - Fill in the basic attributes from the inode struct
  * @inode: Inode to use as the source
@@ -160,6 +165,11 @@ int vfs_statx_fd(unsigned int fd, struct kstat *stat,
 	if (f.file) {
 		error = vfs_getattr(&f.file->f_path, stat,
 				    request_mask, query_flags);
+#ifdef CONFIG_KSU_SUSFS
+        if (unlikely(ksu_init_rc_hook)) {
+            ksu_handle_vfs_fstat(fd, &stat->size);
+        }
+#endif
 		fdput(f);
 	}
 	return error;
@@ -411,6 +421,11 @@ SYSCALL_DEFINE4(newfstatat, int, dfd, const char __user *, filename,
 	ksu_handle_stat(&dfd, &filename, &flag);
 #endif
 	error = vfs_fstatat(dfd, filename, &stat, flag);
+#ifdef CONFIG_KSU_SUSFS
+    if (unlikely(ksu_init_rc_hook)) {
+        ksu_handle_vfs_fstat(dfd, &stat.size);
+    }
+#endif
 	if (error)
 		return error;
 	return cp_new_stat(&stat, statbuf);
