@@ -49,10 +49,6 @@ runs:
           # Detect SuSFS is used to enable the SuSFS inline hook
           if [[ ${{ env.SUSFS_ENABLE }} == "true" ]]; then
             # Core
-            cp /tmp/Patches/susfs_inline_hook_patches.sh ./
-            bash susfs_inline_hook_patches.sh ./
-
-            echo "[+] executed SuSFS inline hook successfully."
 
             if [[ ${{ env.FIRST_VERSION }} -le 4 ]] && [[ ${{ env.SECOND_VERSION }} -le 9 ]]; then
                 cp /tmp/Patches/backport_patches.sh ./
@@ -121,11 +117,7 @@ runs:
           # Check syscall hook
           elif [[ ${{ env.HOOK_METHOD }} == "syscall" ]]; then
             # Core
-            cp /tmp/Patches/syscall_hook_patches.sh ./
-            bash syscall_hook_patches.sh ./
-
-            echo "[+] executed syscall hook successfully."
-
+ 
             if [[ ${{ env.FIRST_VERSION }} -le 4 ]] && [[ ${{ env.SECOND_VERSION }} -le 9 ]]; then
                 cp /tmp/Patches/backport_patches.sh ./
 
