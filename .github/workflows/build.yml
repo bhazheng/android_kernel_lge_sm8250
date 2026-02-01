@@ -95,23 +95,6 @@ jobs:
         mkdir -p out
         make $args vendor/arabella_defconfig
 
-    # [DIBERSIHKAN] Inject Configs (Hanya sisa KSU Core & Setup)
-    # Config SuSFS (sus_path, sus_mount, dll) sudah dihapus karena ditangani action.yml
-    - name: Inject KSU Configs
-      if: github.event.inputs.include_ksu == 'true'
-      run: |
-        echo "KSU enabled: Installing headers and enabling core KSU..."
-        
-        # Install Driver KSU (Tetap Wajib)
-        curl -LSs "https://raw.githubusercontent.com/ReSukiSU/ReSukiSU/main/kernel/setup.sh" | bash -s builtin
-        
-        # Kita hanya perlu enable KSU utama.
-        # Config SuSFS lainnya sudah masuk lewat 'make defconfig' di atas.
-        ./scripts/config --file out/.config \
-            -e KSU \
-            -e THREAD_INFO_IN_TASK \
-            -e KPM
-
     - name: Upload Patch Debug Rejects
       if: failure() || env.BUILD_DEBUGGER == 'true'
       uses: actions/upload-artifact@v4
