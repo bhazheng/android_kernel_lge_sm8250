@@ -32,6 +32,7 @@ env:
   FIRST_VERSION: "4"
   SECOND_VERSION: "19"
   HOOK_METHOD: "syscall"
+  BASEBAND_GUARD_ENABLE: "true"
   KERNEL_PATCH: "false"
   
   # --- DEBUGGING ---
@@ -71,21 +72,21 @@ jobs:
         echo "$HOME/clang/bin" >> $GITHUB_PATH 
         cd $GITHUB_WORKSPACE
 
-    # # [OPTIMASI 2] Pindahkan Prepare Patches ke ATAS (Sebelum Generate Config)
-    # - name: Prepare /tmp/Patches
-    #   run: |
-    #     echo "Cloning Patch Repository..."
-    #     git clone https://github.com/${{ env.PATCHES_SOURCE }} -b ${{ env.PATCHES_BRANCH }} temp_patches
-    #     mkdir -p /tmp/Patches
-    #     cp -r temp_patches/Patches/* /tmp/Patches/
-    #     rm -rf temp_patches
+    # [OPTIMASI 2] Pindahkan Prepare Patches ke ATAS (Sebelum Generate Config)
+    - name: Prepare /tmp/Patches
+      run: |
+        echo "Cloning Patch Repository..."
+        git clone https://github.com/${{ env.PATCHES_SOURCE }} -b ${{ env.PATCHES_BRANCH }} temp_patches
+        mkdir -p /tmp/Patches
+        cp -r temp_patches/Patches/* /tmp/Patches/
+        rm -rf temp_patches
 
     # # [OPTIMASI 3] Jalankan Patching DULUAN (Modifikasi Source & Defconfig)
     # - name: Patch SuSFS
     #   uses: ./.github/workflows/susfs
 
-    # - name: Patch KProbe/Backport
-    #   uses: ./.github/workflows/kprobe
+    - name: Patch KProbe/Backport
+      uses: ./.github/workflows/kprobe
 
     # # [OPTIMASI 4] Generate Config SETELAH Patching
     # # Karena dilakukan setelah patching, ia otomatis mengambil config SuSFS dari action.yml
