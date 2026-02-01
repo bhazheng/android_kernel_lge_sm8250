@@ -41,7 +41,8 @@ runs:
           # Config KSU Core (Pindahan dari build.yml)
           echo "CONFIG_KSU=y" >> $DEFCONFIG_PATH
           echo "CONFIG_KPM=y" >> $DEFCONFIG_PATH
-          
+          echo "CONFIG_KSU_MANUAL_HOOK=y" >> $DEFCONFIG_PATH
+
           # Config SuSFS
           echo "CONFIG_KSU_SUSFS=y" >> $DEFCONFIG_PATH
           echo "CONFIG_KSU_SUSFS_SUS_PATH=y" >> $DEFCONFIG_PATH
