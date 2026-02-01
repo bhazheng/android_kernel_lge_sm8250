@@ -47,6 +47,9 @@ runs:
           # echo "CONFIG_KSU_MANUAL_HOOK_AUTO_SETUID_HOOK=y" >> $DEFCONFIG_PATH
           # echo "CONFIG_KSU_MANUAL_HOOK_AUTO_INITRC_HOOK=y" >> $DEFCONFIG_PATH
 
+          echo "CONFIG_KALLSYMS=y" >> $DEFCONFIG_PATH
+          echo "CONFIG_KALLSYMS_ALL=y" >> $DEFCONFIG_PATH
+
           # Config SuSFS
           echo "CONFIG_KSU_SUSFS=y" >> $DEFCONFIG_PATH
           echo "CONFIG_KSU_SUSFS_SUS_PATH=y" >> $DEFCONFIG_PATH
