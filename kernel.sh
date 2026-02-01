@@ -49,6 +49,38 @@ MAKE_ARGS=(
     KCFLAGS="-Wno-error -Wno-error=incompatible-pointer-types"
 )
 
+# 2. Inject SuSFS v2.0.0 & KSU Configs (Xiaomi Dev Method)
+if [ $KSU_ENABLE -eq 1 ]; then
+    echo "KSU is enabled"
+    # Exact Xiaomi dev trick: pulling the remote setup logic
+    curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s builtin
+    
+    echo "Applying SuSFS v2.0.0 Configs..."
+    ./scripts/config --file $OUT_DIR/.config \
+          # echo "CONFIG_KSU_MANUAL_HOOK_AUTO_INPUT_HOOK=y" >> $DEFCONFIG_PATH
+          # echo "CONFIG_KSU_MANUAL_HOOK_AUTO_SETUID_HOOK=y" >> $DEFCONFIG_PATH
+          # echo "CONFIG_KSU_MANUAL_HOOK_AUTO_INITRC_HOOK=y" >> $DEFCONFIG_PATH
+        -e KSU \
+        -e KSU_SUSFS \
+        -e KSU_MANUAL_HOOK \
+        -e KSU_SUSFS_SUS_PATH \
+        -e KSU_SUSFS_SUS_MOUNT \
+        -e KSU_SUSFS_SUS_KSTAT \
+        -e KSU_SUSFS_SPOOF_UNAME \
+        -e KSU_SUSFS_ENABLE_LOG \
+        -e KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS \
+        -e KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG \
+        -e KSU_SUSFS_OPEN_REDIRECT \
+        -e KSU_SUSFS_SUS_MAP \
+        -e THREAD_INFO_IN_TASK \
+        -e KALLSYMS_ALL \
+        -e KALLSYMS \
+        -e KPM
+else
+    echo "KSU is disabled"
+    ./scripts/config --file $OUT_DIR/.config -d KSU
+fi
+
 # 3. Compile Kernel
 # Kita tambahkan target 'dtbo.img' karena V60 memerlukannya.
 # Fallback ke 'Image' saja jika source tidak support dtbo (jarang terjadi di SD865).

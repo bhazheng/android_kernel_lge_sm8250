@@ -71,47 +71,47 @@ jobs:
         echo "$HOME/clang/bin" >> $GITHUB_PATH 
         cd $GITHUB_WORKSPACE
 
-    # [OPTIMASI 2] Pindahkan Prepare Patches ke ATAS (Sebelum Generate Config)
-    - name: Prepare /tmp/Patches
-      run: |
-        echo "Cloning Patch Repository..."
-        git clone https://github.com/${{ env.PATCHES_SOURCE }} -b ${{ env.PATCHES_BRANCH }} temp_patches
-        mkdir -p /tmp/Patches
-        cp -r temp_patches/Patches/* /tmp/Patches/
-        rm -rf temp_patches
+    # # [OPTIMASI 2] Pindahkan Prepare Patches ke ATAS (Sebelum Generate Config)
+    # - name: Prepare /tmp/Patches
+    #   run: |
+    #     echo "Cloning Patch Repository..."
+    #     git clone https://github.com/${{ env.PATCHES_SOURCE }} -b ${{ env.PATCHES_BRANCH }} temp_patches
+    #     mkdir -p /tmp/Patches
+    #     cp -r temp_patches/Patches/* /tmp/Patches/
+    #     rm -rf temp_patches
 
-    # [OPTIMASI 3] Jalankan Patching DULUAN (Modifikasi Source & Defconfig)
-    - name: Patch SuSFS
-      uses: ./.github/workflows/susfs
+    # # [OPTIMASI 3] Jalankan Patching DULUAN (Modifikasi Source & Defconfig)
+    # - name: Patch SuSFS
+    #   uses: ./.github/workflows/susfs
 
     # - name: Patch KProbe/Backport
     #   uses: ./.github/workflows/kprobe
 
-    # [OPTIMASI 4] Generate Config SETELAH Patching
-    # Karena dilakukan setelah patching, ia otomatis mengambil config SuSFS dari action.yml
-    - name: Generate Base Config
-      run: |
-        args="O=out ARCH=arm64 CC=clang CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- LLVM=1 LLVM_IAS=1"
-        mkdir -p out
-        make $args vendor/arabella_defconfig
+    # # [OPTIMASI 4] Generate Config SETELAH Patching
+    # # Karena dilakukan setelah patching, ia otomatis mengambil config SuSFS dari action.yml
+    # - name: Generate Base Config
+    #   run: |
+    #     args="O=out ARCH=arm64 CC=clang CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- LLVM=1 LLVM_IAS=1"
+    #     mkdir -p out
+    #     make $args vendor/arabella_defconfig
 
-    - name: Upload Patch Debug Rejects
-      if: failure() || env.BUILD_DEBUGGER == 'true'
-      uses: actions/upload-artifact@v4
-      with:
-        name: patch-reject-files
-        path: |
-          *.rej
-          rej_files_*.tar.gz
+    # - name: Upload Patch Debug Rejects
+    #   if: failure() || env.BUILD_DEBUGGER == 'true'
+    #   uses: actions/upload-artifact@v4
+    #   with:
+    #     name: patch-reject-files
+    #     path: |
+    #       *.rej
+    #       rej_files_*.tar.gz
 
-    - name: Cache ccache
-      uses: actions/cache@v4
-      with:
-        path: ~/.cache/ccache_mikernel
-        key: ${{ runner.os }}-ccache-v60-${{ github.event.inputs.include_ksu }}-${{ env.SHORT_SHA }}
-        restore-keys: |
-          ${{ runner.os }}-ccache-v60-${{ github.event.inputs.include_ksu }}-
-          ${{ runner.os }}-ccache-v60-
+    # - name: Cache ccache
+    #   uses: actions/cache@v4
+    #   with:
+    #     path: ~/.cache/ccache_mikernel
+    #     key: ${{ runner.os }}-ccache-v60-${{ github.event.inputs.include_ksu }}-${{ env.SHORT_SHA }}
+    #     restore-keys: |
+    #       ${{ runner.os }}-ccache-v60-${{ github.event.inputs.include_ksu }}-
+    #       ${{ runner.os }}-ccache-v60-
 
     - name: Build kernel
       run: |
