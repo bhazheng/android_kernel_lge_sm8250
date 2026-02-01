@@ -82,19 +82,19 @@ jobs:
         rm -rf temp_patches
 
     # # [OPTIMASI 3] Jalankan Patching DULUAN (Modifikasi Source & Defconfig)
-    # - name: Patch SuSFS
-    #   uses: ./.github/workflows/susfs
+    - name: Patch SuSFS
+      uses: ./.github/workflows/susfs
 
     - name: Patch KProbe/Backport
       uses: ./.github/workflows/kprobe
 
-    # # [OPTIMASI 4] Generate Config SETELAH Patching
+    # [OPTIMASI 4] Generate Config SETELAH Patching
     # # Karena dilakukan setelah patching, ia otomatis mengambil config SuSFS dari action.yml
-    # - name: Generate Base Config
-    #   run: |
-    #     args="O=out ARCH=arm64 CC=clang CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- LLVM=1 LLVM_IAS=1"
-    #     mkdir -p out
-    #     make $args vendor/arabella_defconfig
+    - name: Generate Base Config
+      run: |
+        args="O=out ARCH=arm64 CC=clang CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- LLVM=1 LLVM_IAS=1"
+        mkdir -p out
+        make $args vendor/arabella_defconfig
 
     # - name: Upload Patch Debug Rejects
     #   if: failure() || env.BUILD_DEBUGGER == 'true'
