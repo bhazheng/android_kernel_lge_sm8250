@@ -2311,13 +2311,11 @@ static int map_files_get_link(struct dentry *dentry, struct path *path)
 
 	rc = -ENOENT;
 	vma = find_exact_vma(mm, vm_start, vm_end);
-#ifndef CONFIG_KSU
 	if (vma && vma->vm_file) {
 		*path = vma->vm_file->f_path;
 		path_get(path);
 		rc = 0;
 	}
-#endif
 	mmap_read_unlock(mm);
 
 out_mmput:
