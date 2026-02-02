@@ -50,14 +50,12 @@ MAKE_ARGS=(
     KCFLAGS="-Wno-error -Wno-error=incompatible-pointer-types"
 )
 
-# 1. Generate Base Config
-make "${MAKE_ARGS[@]}" $DEFCONFIG
 
 # 2. Inject SuSFS v2.0.0 & KSU Configs (Xiaomi Dev Method)
 if [ $KSU_ENABLE -eq 1 ]; then
     echo "KSU is enabled"
     # Exact Xiaomi dev trick: pulling the remote setup logic
-    curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s builtin
+    #curl -LSs "https://raw.githubusercontent.com/ReSukiSU/ReSukiSU/main/kernel/setup.sh" | bash -s builtin
           # echo "CONFIG_KSU_MANUAL_HOOK_AUTO_INPUT_HOOK=y" >> $DEFCONFIG_PATH
           # echo "CONFIG_KSU_MANUAL_HOOK_AUTO_SETUID_HOOK=y" >> $DEFCONFIG_PATH
           # echo "CONFIG_KSU_MANUAL_HOOK_AUTO_INITRC_HOOK=y" >> $DEFCONFIG_PATH
@@ -67,6 +65,9 @@ if [ $KSU_ENABLE -eq 1 ]; then
         -e KSU \
         -e KSU_SUSFS \
         -e KSU_MANUAL_HOOK \
+        -e KSU_MANUAL_HOOK_AUTO_INPUT_HOOK \
+        -e KSU_MANUAL_HOOK_AUTO_SETUID_HOOK \
+        -e KSU_MANUAL_HOOK_AUTO_INITRC_HOOK \
         -e KSU_SUSFS_SUS_PATH \
         -e KSU_SUSFS_SUS_MOUNT \
         -e KSU_SUSFS_SUS_KSTAT \
