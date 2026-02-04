@@ -237,12 +237,12 @@ static void drop_mountpoint(struct fs_pin *p)
 }
 
 #ifdef CONFIG_KSU_SUSFS_SUS_MOUNT
-/* A copy of alloc_vfsmnt() but reuse the original mnt_id to mnt */
-static struct mount *susfs_reuse_sus_vfsmnt(const char *name, int orig_mnt_id)
+/* A copy of alloc_vfsmnt() but allocates the fake mnt_id to mnt */
+static struct mount *susfs_alloc_sus_vfsmnt(const char *name)
 {
 	struct mount *mnt = kmem_cache_zalloc(mnt_cache, GFP_KERNEL);
 	if (mnt) {
-		mnt->mnt_id = orig_mnt_id;
+		mnt->mnt_id = DEFAULT_KSU_MNT_ID;
 
 		if (name) {
 			mnt->mnt_devname = kstrdup_const(name,
@@ -262,7 +262,6 @@ static struct mount *susfs_reuse_sus_vfsmnt(const char *name, int orig_mnt_id)
 		mnt->mnt_writers = 0;
 		#endif
 		mnt->mnt.data = NULL;
-
 		// Makes ida_free() easier to determine whether it should free the mnt_id or not
 		mnt->mnt.susfs_mnt_id_backup = DEFAULT_KSU_MNT_ID;
 
@@ -291,12 +290,12 @@ static struct mount *susfs_reuse_sus_vfsmnt(const char *name, int orig_mnt_id)
 #endif
 
 #ifdef CONFIG_KSU_SUSFS_SUS_MOUNT
-/* A copy of alloc_vfsmnt() but allocates the fake mnt_id to mnt */
-static struct mount *susfs_alloc_sus_vfsmnt(const char *name)
+/* A copy of alloc_vfsmnt() but reuse the original mnt_id to mnt */
+static struct mount *susfs_reuse_sus_vfsmnt(const char *name, int orig_mnt_id)
 {
 	struct mount *mnt = kmem_cache_zalloc(mnt_cache, GFP_KERNEL);
 	if (mnt) {
-		mnt->mnt_id = DEFAULT_KSU_MNT_ID;
+		mnt->mnt_id = orig_mnt_id;
 
 		if (name) {
 			mnt->mnt_devname = kstrdup_const(name,
@@ -316,6 +315,7 @@ static struct mount *susfs_alloc_sus_vfsmnt(const char *name)
 		mnt->mnt_writers = 0;
 		#endif
 		mnt->mnt.data = NULL;
+
 		// Makes ida_free() easier to determine whether it should free the mnt_id or not
 		mnt->mnt.susfs_mnt_id_backup = DEFAULT_KSU_MNT_ID;
 
