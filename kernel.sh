@@ -64,6 +64,10 @@ if [ $KSU_ENABLE -eq 1 ]; then
     echo "Applying SuSFS v2.0.0 Configs..."
     ./scripts/config --file $OUT_DIR/.config \
         -e KSU \
+        -e KSU_MANUAL_HOOK \
+        -e KSU_MANUAL_HOOK_AUTO_INPUT_HOOK \
+        -e KSU_MANUAL_HOOK_AUTO_SETUID_HOOK \
+        -e KSU_MANUAL_HOOK_AUTO_INITRC_HOOK \
         -e KSU_SUSFS \
         -e KSU_SUSFS_SUS_PATH \
         -e KSU_SUSFS_SUS_MOUNT \
