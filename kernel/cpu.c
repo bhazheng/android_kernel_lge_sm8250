@@ -33,6 +33,7 @@
 #include <linux/percpu-rwsem.h>
 #include <uapi/linux/sched/types.h>
 #include <linux/cpuset.h>
+#include <linux/random.h>
 
 #include <trace/events/power.h>
 #define CREATE_TRACE_POINTS
@@ -336,7 +337,7 @@ static void lockdep_acquire_cpus_lock(void)
 
 static void lockdep_release_cpus_lock(void)
 {
-	rwsem_release(&cpu_hotplug_lock.rw_sem.dep_map, 1, _THIS_IP_);
+	rwsem_release(&cpu_hotplug_lock.rw_sem.dep_map, _THIS_IP_);
 }
 
 /*
@@ -664,10 +665,10 @@ static void cpuhp_thread_fun(unsigned int cpu)
 	smp_mb();
 
 	/*
-	* The BP holds the hotplug lock, but we're now running on the AP,
-	* ensure that anybody asserting the lock is held, will actually find
-	* it so.
-	*/
+	 * The BP holds the hotplug lock, but we're now running on the AP,
+	 * ensure that anybody asserting the lock is held, will actually find
+	 * it so.
+	 */
 	lockdep_acquire_cpus_lock();
 	cpuhp_lock_acquire(bringup);
 
