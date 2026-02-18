@@ -437,6 +437,7 @@ static void keep_alive_response(void *info)
 	if (old == (final_alive_mask & ~this_cpu_bit))
 		wake_up_process(wdog_dd->watchdog_task);
 #ifdef CONFIG_LGE_HANDLE_PANIC
+	int cpu = ilog2(this_cpu_bit);
 	wdog_dd->alive_time[cpu] = sched_clock();
 #endif
 }
