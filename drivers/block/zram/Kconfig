@@ -1,9 +1,7 @@
 # SPDX-License-Identifier: GPL-2.0
 config ZRAM
 	tristate "Compressed RAM block device support"
-	depends on BLOCK && SYSFS && ZSMALLOC && CRYPTO && MMU
-	select CRYPTO_LZO
-	select CRYPTO_LZO_RLE
+	depends on BLOCK && SYSFS && ZSMALLOC && CRYPTO
 	select CRYPTO_LZ4
 	select CRYPTO_LZ4KD
 	default n
@@ -81,6 +79,25 @@ config ZRAM_DEDUP
 	  computation time trade-off. Please check the benefit before
 	  enabling this option. Experiment shows the positive effect when
 	  the zram is used as blockdev and is used to store build output.
+
+config ZRAM_ENTROPY
+	bool "Use entropy optimization for zram"
+	depends on ZRAM
+	default y
+	help
+	  With this feature, entropy will be calculated for each page.
+	  Pages above ZRAM_ENTROPY_THRESHOLD entropy will be
+	  stored uncompressed. Use this feature if you need a performance
+	  boost and a small loss in compression.
+
+config ZRAM_ENTROPY_THRESHOLD
+	int
+	depends on ZRAM && ZRAM_ENTROPY
+	default 100000
+	help
+	  Pages with entropy above ZRAM_ENTROPY_THRESHOLD will be stored
+	  uncompressed. The default value was chosen as a result a lot of
+	  experiments. You can try set your own value.
 
 config ZRAM_WRITEBACK
        bool "Write back incompressible or idle page to backing device"

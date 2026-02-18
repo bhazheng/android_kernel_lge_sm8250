@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
- * Copyright (c) 2012-2020, The Linux Foundation. All rights reserved.
- * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
- */
+* Copyright (c) 2012-2020, The Linux Foundation. All rights reserved.
+* Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
+*/
 #include <linux/dma-buf.h>
 #include <linux/dma-mapping.h>
 #include <linux/slab.h>
@@ -641,9 +641,9 @@ static inline int poll_on_early_response(struct smq_invoke_ctx *ctx)
 	poll = (uint32_t *)(crclist + M_CRCLIST);
 
 	/*
-	 * poll on memory for actual completion after receiving
-	 * early response from DSP. Return failure on timeout.
-	 */
+	* poll on memory for actual completion after receiving
+	* early response from DSP. Return failure on timeout.
+	*/
 	preempt_disable();
 	for (ii = 0, jj = 0; ii < FASTRPC_POLL_TIME; ii++, jj++) {
 		if (*poll == FASTRPC_EARLY_WAKEUP_POLL) {
@@ -833,7 +833,7 @@ static int dma_alloc_memory(dma_addr_t *region_phys, void **vaddr, size_t size,
 }
 
 static int fastrpc_mmap_remove(struct fastrpc_file *fl, uintptr_t va,
-			       size_t len, struct fastrpc_mmap **ppmap)
+					size_t len, struct fastrpc_mmap **ppmap)
 {
 	struct fastrpc_mmap *match = NULL, *map;
 	struct hlist_node *n;
@@ -914,9 +914,9 @@ static void fastrpc_mmap_free(struct fastrpc_mmap *map, uint32_t flags)
 		if (map->refs)
 			map->refs--;
 		/* flags is passed as 1 during fastrpc_file_free
-		 * (ie process exit), so that maps will be cleared
-		 * even though references are present.
-		 */
+		* (ie process exit), so that maps will be cleared
+		* even though references are present.
+		*/
 		if (!map->refs && !map->ctx_refs && !map->dma_handle_refs)
 			hlist_del_init(&map->hn);
 		if (map->refs > 0 && !flags)
@@ -1115,9 +1115,9 @@ static int fastrpc_mmap_create(struct fastrpc_file *fl, int fd,
 		else if (map->attr & FASTRPC_ATTR_COHERENT)
 			map->attach->dma_map_attrs |= DMA_ATTR_FORCE_COHERENT;
 		/*
-		 * Skip CPU sync if IO Cohernecy is not supported
-		 * as we flush later
-		 */
+		* Skip CPU sync if IO Cohernecy is not supported
+		* as we flush later
+		*/
 		else if (!sess->smmu.coherent)
 			map->attach->dma_map_attrs |= DMA_ATTR_SKIP_CPU_SYNC;
 
@@ -1292,7 +1292,7 @@ static int fastrpc_buf_alloc(struct fastrpc_file *fl, size_t size,
 		buf->remote = remote;
 	}
 	*obuf = buf;
- bail:
+bail:
 	if (err && buf)
 		fastrpc_buf_free(buf, 0);
 	return err;
@@ -1300,8 +1300,8 @@ static int fastrpc_buf_alloc(struct fastrpc_file *fl, size_t size,
 
 
 static int context_restore_interrupted(struct fastrpc_file *fl,
-				       struct fastrpc_ioctl_invoke_crc *inv,
-				       struct smq_invoke_ctx **po)
+						struct fastrpc_ioctl_invoke_crc *inv,
+						struct smq_invoke_ctx **po)
 {
 	int err = 0;
 	struct smq_invoke_ctx *ctx = NULL, *ictx = NULL;
@@ -1413,8 +1413,8 @@ bail:
 static void context_free(struct smq_invoke_ctx *ctx);
 
 static int context_alloc(struct fastrpc_file *fl, uint32_t kernel,
-			 struct fastrpc_ioctl_invoke_crc *invokefd,
-			 struct smq_invoke_ctx **po)
+			struct fastrpc_ioctl_invoke_crc *invokefd,
+			struct smq_invoke_ctx **po)
 {
 	struct fastrpc_apps *me = &gfa;
 	int err = 0, bufs, ii, size = 0, cid = -1;
@@ -1529,7 +1529,7 @@ static void context_free(struct smq_invoke_ctx *ctx)
 	int i;
 	struct fastrpc_apps *me = &gfa;
 	int nbufs = REMOTE_SCALARS_INBUFS(ctx->sc) +
-		    REMOTE_SCALARS_OUTBUFS(ctx->sc);
+			REMOTE_SCALARS_OUTBUFS(ctx->sc);
 	int cid = ctx->fl->cid;
 	struct fastrpc_channel_ctx *chan = &me->channel[cid];
 	unsigned long irq_flags = 0;
@@ -1912,9 +1912,9 @@ static int get_args(uint32_t kernel, struct smq_invoke_ctx *ctx)
 	}
 	PERF_END);
 	/* Since we are not holidng map_mutex during get args whole time
-	 * it is possible that dma handle map may be removed by some invalid
-	 * fd passed by DSP. Inside the lock check if the map present or not
-	 */
+	* it is possible that dma handle map may be removed by some invalid
+	* fd passed by DSP. Inside the lock check if the map present or not
+	*/
 	mutex_lock(&ctx->fl->map_mutex);
 	for (i = bufs; i < bufs + handles; ++i) {
 		struct fastrpc_mmap *mmap = NULL;
@@ -1968,10 +1968,10 @@ static int get_args(uint32_t kernel, struct smq_invoke_ctx *ctx)
 		if (err)
 			goto bail;
 		rpra[i].buf.pv =
-			 (args - ctx->overps[oix]->offset);
+			(args - ctx->overps[oix]->offset);
 		pages[list[i].pgidx].addr = ctx->buf->phys -
-					    ctx->overps[oix]->offset +
-					    (copylen - rlen);
+						ctx->overps[oix]->offset +
+						(copylen - rlen);
 		pages[list[i].pgidx].addr =
 			buf_page_start(pages[list[i].pgidx].addr);
 		buf = rpra[i].buf.pv;
@@ -2070,12 +2070,12 @@ static int get_args(uint32_t kernel, struct smq_invoke_ctx *ctx)
 	/* Copy rpra to local buffer */
 	if (ctx->lrpra && rpra && lrpralen > 0)
 		memcpy(ctx->lrpra, rpra, lrpralen);
- bail:
+bail:
 	return err;
 }
 
 static int put_args(uint32_t kernel, struct smq_invoke_ctx *ctx,
-		    remote_arg_t *upra)
+			remote_arg_t *upra)
 {
 	uint32_t sc = ctx->sc;
 	struct smq_invoke_buf *list;
@@ -2132,7 +2132,7 @@ static int put_args(uint32_t kernel, struct smq_invoke_ctx *ctx,
 		K_COPY_TO_USER(err, kernel, ctx->crc,
 			crclist, M_CRCLIST*sizeof(uint32_t));
 
- bail:
+bail:
 	return err;
 }
 
@@ -2228,7 +2228,7 @@ bail:
 }
 
 static int fastrpc_invoke_send(struct smq_invoke_ctx *ctx,
-			       uint32_t kernel, uint32_t handle)
+					uint32_t kernel, uint32_t handle)
 {
 	struct smq_msg *msg = &ctx->msg;
 	struct fastrpc_file *fl = ctx->fl;
@@ -2282,7 +2282,7 @@ static int fastrpc_invoke_send(struct smq_invoke_ctx *ctx,
 		(void *)msg, sizeof(*msg),
 		msg->invoke.header.ctx, handle, ctx->sc, err);
 	mutex_unlock(&channel_ctx->rpmsg_mutex);
- bail:
+bail:
 	return err;
 }
 
@@ -2317,9 +2317,9 @@ static inline void fastrpc_pm_awake(struct fastrpc_file *fl, int channel_type)
 	struct wakeup_source *wake_source = NULL;
 
 	/*
-	 * Vote with PM to abort any suspend in progress and
-	 * keep system awake for specified timeout
-	 */
+	* Vote with PM to abort any suspend in progress and
+	* keep system awake for specified timeout
+	*/
 	if (channel_type == SECURE_CHANNEL)
 		wake_source = me->wake_source_secure;
 	else if (channel_type == NON_SECURE_CHANNEL)
@@ -2343,7 +2343,7 @@ static inline int fastrpc_wait_for_response(struct smq_invoke_ctx *ctx,
 }
 
 static void fastrpc_wait_for_completion(struct smq_invoke_ctx *ctx,
-		 int *pInterrupted, uint32_t kernel)
+		int *pInterrupted, uint32_t kernel)
 {
 	int interrupted = 0, err = 0;
 	int jj;
@@ -2440,8 +2440,8 @@ static void fastrpc_update_invoke_count(uint32_t handle, int64_t *perf_counter,
 }
 
 static int fastrpc_internal_invoke(struct fastrpc_file *fl, uint32_t mode,
-				   uint32_t kernel,
-				   struct fastrpc_ioctl_invoke_crc *inv)
+					uint32_t kernel,
+					struct fastrpc_ioctl_invoke_crc *inv)
 {
 	struct smq_invoke_ctx *ctx = NULL;
 	struct fastrpc_ioctl_invoke *invoke = &inv->inv;
@@ -2517,7 +2517,7 @@ static int fastrpc_internal_invoke(struct fastrpc_file *fl, uint32_t mode,
 
 	if (err)
 		goto bail;
- wait:
+wait:
 	fastrpc_wait_for_completion(ctx, &interrupted, kernel);
 	VERIFY(err, 0 == (err = interrupted));
 	if (err)
@@ -2543,7 +2543,7 @@ static int fastrpc_internal_invoke(struct fastrpc_file *fl, uint32_t mode,
 	VERIFY(err, 0 == (err = ctx->retval));
 	if (err)
 		goto bail;
- bail:
+bail:
 	if (ctx && interrupted == -ERESTARTSYS) {
 		trace_fastrpc_context_interrupt(cid, (uint64_t)ctx,
 			ctx->msg.invoke.header.ctx, ctx->handle, ctx->sc);
@@ -2809,8 +2809,8 @@ static int fastrpc_init_process(struct fastrpc_file *fl,
 			inbuf.pageslen = 1;
 			mutex_lock(&fl->map_mutex);
 			err = fastrpc_mmap_create(fl, -1, 0, init->mem,
-				 init->memlen, ADSP_MMAP_REMOTE_HEAP_ADDR,
-				 &mem);
+				init->memlen, ADSP_MMAP_REMOTE_HEAP_ADDR,
+				&mem);
 			if (mem)
 				mem->is_filemap = true;
 			mutex_unlock(&fl->map_mutex);
@@ -3025,9 +3025,9 @@ static int fastrpc_get_info_from_kernel(
 
 	if (!gcinfo[domain].dsp_cap_kernel.is_cached) {
 		/*
-		 * Information not on kernel, query device for information
-		 * and cache on kernel
-		 */
+		* Information not on kernel, query device for information
+		* and cache on kernel
+		*/
 		err = fastrpc_get_info_from_dsp(fl, dsp_cap->dsp_attributes,
 				FASTRPC_MAX_DSP_ATTRIBUTES - 1,
 				domain);
@@ -3050,9 +3050,9 @@ static int fastrpc_get_info_from_kernel(
 		default:
 			err = -1;
 			/*
-			 * Reset is_cached flag to 0 so subsequent calls
-			 * can try to query dsp again
-			 */
+			* Reset is_cached flag to 0 so subsequent calls
+			* can try to query dsp again
+			*/
 			gcinfo[domain].dsp_cap_kernel.is_cached = 0;
 			pr_warn("adsprpc: %s: %s: returned bad domain support value %d\n",
 					current->comm,
@@ -3450,7 +3450,7 @@ static inline void get_fastrpc_ioctl_munmap_64(
 }
 
 static int fastrpc_internal_munmap(struct fastrpc_file *fl,
-				   struct fastrpc_ioctl_munmap *ud)
+					struct fastrpc_ioctl_munmap *ud)
 {
 	int err = 0;
 	struct fastrpc_mmap *map = NULL;
@@ -3460,7 +3460,7 @@ static int fastrpc_internal_munmap(struct fastrpc_file *fl,
 	VERIFY(err, fl->dsp_proc_init == 1);
 	if (err) {
 		pr_err("adsprpc: ERROR: %s: user application %s trying to unmap without initialization\n",
-			 __func__, current->comm);
+			__func__, current->comm);
 		err = EBADR;
 		return err;
 	}
@@ -3469,7 +3469,7 @@ static int fastrpc_internal_munmap(struct fastrpc_file *fl,
 	spin_lock(&fl->hlock);
 	hlist_for_each_entry_safe(rbuf, n, &fl->remote_bufs, hn_rem) {
 		if (rbuf->raddr && ((rbuf->flags == ADSP_MMAP_ADD_PAGES) ||
-				    (rbuf->flags == ADSP_MMAP_ADD_PAGES_LLC))) {
+					(rbuf->flags == ADSP_MMAP_ADD_PAGES_LLC))) {
 			if ((rbuf->raddr == ud->vaddrout) &&
 				(rbuf->size == ud->size)) {
 				free = rbuf;
@@ -3521,10 +3521,10 @@ bail:
 }
 
 /*
- *	fastrpc_internal_munmap_fd can only be used for buffers
- *	mapped with persist attributes. This can only be called
- *	once for any persist buffer
- */
+*	fastrpc_internal_munmap_fd can only be used for buffers
+*	mapped with persist attributes. This can only be called
+*	once for any persist buffer
+*/
 static int fastrpc_internal_munmap_fd(struct fastrpc_file *fl,
 				struct fastrpc_ioctl_munmap_fd *ud)
 {
@@ -3563,7 +3563,7 @@ bail:
 
 
 static int fastrpc_internal_mmap(struct fastrpc_file *fl,
-				 struct fastrpc_ioctl_mmap *ud)
+				struct fastrpc_ioctl_mmap *ud)
 {
 	struct fastrpc_mmap *map = NULL;
 	struct fastrpc_buf *rbuf = NULL;
@@ -3580,7 +3580,7 @@ static int fastrpc_internal_mmap(struct fastrpc_file *fl,
 	}
 	mutex_lock(&fl->internal_map_mutex);
 	if ((ud->flags == ADSP_MMAP_ADD_PAGES) ||
-	    (ud->flags == ADSP_MMAP_ADD_PAGES_LLC)) {
+		(ud->flags == ADSP_MMAP_ADD_PAGES_LLC)) {
 		if (ud->vaddrin) {
 			err = EINVAL;
 			pr_err("adsprpc: %s: %s: ERROR: adding user allocated pages is not supported\n",
@@ -3608,7 +3608,7 @@ static int fastrpc_internal_mmap(struct fastrpc_file *fl,
 		mutex_lock(&fl->map_mutex);
 		VERIFY(err, !fastrpc_mmap_create(fl, ud->fd, 0,
 				(uintptr_t)ud->vaddrin, ud->size,
-				 ud->flags, &map));
+				ud->flags, &map));
 		mutex_unlock(&fl->map_mutex);
 		if (err)
 			goto bail;
@@ -3628,7 +3628,7 @@ static int fastrpc_internal_mmap(struct fastrpc_file *fl,
 			fastrpc_mmap_add_global(map);
 	}
 	ud->vaddrout = raddr;
- bail:
+bail:
 	if (err) {
 		if (map) {
 			mutex_lock(&fl->map_mutex);
@@ -3677,7 +3677,7 @@ static int fastrpc_session_alloc_locked(struct fastrpc_channel_ctx *chan,
 	}
 
 	*session = &chan->session[idx];
- bail:
+bail:
 	return err;
 }
 
@@ -3826,7 +3826,7 @@ static int fastrpc_rpmsg_callback(struct rpmsg_device *rpdev, void *data,
 			goto bail_unlock;
 	}
 	context_notify_user(chan->ctxtable[index], rsp->retval,
-				 rspFlags, earlyWakeTime);
+				rspFlags, earlyWakeTime);
 bail_unlock:
 	spin_unlock_irqrestore(&chan->ctxlock, irq_flags);
 bail:
@@ -3949,7 +3949,7 @@ static int fastrpc_debugfs_open(struct inode *inode, struct file *filp)
 }
 
 static ssize_t fastrpc_debugfs_read(struct file *filp, char __user *buffer,
-					 size_t count, loff_t *position) {
+					size_t count, loff_t *position) {
 	struct fastrpc_apps *me = &gfa;
 	struct fastrpc_file *fl = filp->private_data;
 	struct hlist_node *n;
@@ -4207,7 +4207,7 @@ static int fastrpc_channel_open(struct fastrpc_file *fl)
 
 	mutex_lock(&me->channel[cid].smd_mutex);
 	if (me->channel[cid].ssrcount !=
-				 me->channel[cid].prevssrcount) {
+				me->channel[cid].prevssrcount) {
 		if (me->channel[cid].subsystemstate != SUBSYSTEM_UP) {
 			err = -ENOTCONN;
 			mutex_unlock(&me->channel[cid].smd_mutex);
@@ -4217,7 +4217,7 @@ static int fastrpc_channel_open(struct fastrpc_file *fl)
 	fl->ssrcount = me->channel[cid].ssrcount;
 
 	if (cid == ADSP_DOMAIN_ID && me->channel[cid].ssrcount !=
-			 me->channel[cid].prevssrcount) {
+			me->channel[cid].prevssrcount) {
 		mutex_lock(&fl->map_mutex);
 		err = fastrpc_mmap_remove_ssr(fl, 1);
 		mutex_unlock(&fl->map_mutex);
@@ -4242,8 +4242,8 @@ static inline void fastrpc_register_wakeup_source(struct device *dev,
 	wake_source = wakeup_source_register(dev, client_name);
 	if (IS_ERR_OR_NULL(wake_source)) {
 		pr_err("adsprpc: Error: %s: %s: wakeup_source_register failed for dev %s, client %s with err %ld\n",
-		       __func__, current->comm, dev_name(dev),
-		       client_name, PTR_ERR(wake_source));
+				__func__, current->comm, dev_name(dev),
+				client_name, PTR_ERR(wake_source));
 		return;
 	}
 	*device_wake_source = wake_source;
@@ -4256,9 +4256,9 @@ static int fastrpc_device_open(struct inode *inode, struct file *filp)
 	struct fastrpc_apps *me = &gfa;
 
 	/*
-	 * Indicates the device node opened
-	 * MINOR_NUM_DEV or MINOR_NUM_SECURE_DEV
-	 */
+	* Indicates the device node opened
+	* MINOR_NUM_DEV or MINOR_NUM_SECURE_DEV
+	*/
 	int dev_minor = MINOR(inode->i_rdev);
 
 	VERIFY(err, ((dev_minor == MINOR_NUM_DEV) ||
@@ -4365,11 +4365,11 @@ static int fastrpc_get_info(struct fastrpc_file *fl, uint32_t *info)
 		/* Check to see if the device node is non-secure */
 		if (fl->dev_minor == MINOR_NUM_DEV) {
 			/*
-			 * If an app is trying to offload to a secure remote
-			 * channel by opening the non-secure device node, allow
-			 * the access if the subsystem supports unsigned
-			 * offload. Untrusted apps will be restricted.
-			 */
+			* If an app is trying to offload to a secure remote
+			* channel by opening the non-secure device node, allow
+			* the access if the subsystem supports unsigned
+			* offload. Untrusted apps will be restricted.
+			*/
 			if (chan->secure == SECURE_CHANNEL &&
 				!chan->unsigned_support) {
 				err = -EACCES;
@@ -4400,7 +4400,6 @@ static int fastrpc_internal_control(struct fastrpc_file *fl,
 {
 	int err = 0;
 	unsigned int latency;
-	cpumask_t mask;
 	struct fastrpc_apps *me = &gfa;
 	u32 len = me->silvercores.corecount, i = 0;
 
@@ -4418,11 +4417,10 @@ static int fastrpc_internal_control(struct fastrpc_file *fl,
 		VERIFY(err, latency != 0);
 		if (err)
 			goto bail;
-		cpumask_clear(&mask);
+		fl->pm_qos_req.cpus_affine = 0;
 		for (i = 0; i < len; i++)
-			cpumask_set_cpu(me->silvercores.coreno[i], &mask);
+			fl->pm_qos_req.cpus_affine |= BIT(me->silvercores.coreno[i]);
 		fl->pm_qos_req.type = PM_QOS_REQ_AFFINE_CORES;
-		cpumask_copy(&fl->pm_qos_req.cpus_affine, &mask);
 
 		mutex_lock(&fl->pm_qos_mutex);
 		if (!fl->qos_request) {
@@ -4531,7 +4529,7 @@ static int fastrpc_getperf(struct fastrpc_ioctl_perf *ioctl_perf,
 		char *keys = PERF_KEYS;
 
 		K_COPY_TO_USER(err, 0, (void *)ioctl_perf->keys,
-					 keys, strlen(keys)+1);
+					keys, strlen(keys)+1);
 		if (err)
 			goto bail;
 	}
@@ -4625,7 +4623,7 @@ bail:
 }
 
 static long fastrpc_device_ioctl(struct file *file, unsigned int ioctl_num,
-				 unsigned long ioctl_param)
+				unsigned long ioctl_param)
 {
 	union {
 		struct fastrpc_ioctl_invoke_crc inv;
@@ -4757,7 +4755,7 @@ static long fastrpc_device_ioctl(struct file *file, unsigned int ioctl_num,
 		err = fastrpc_control(&p.cp, param, fl);
 		break;
 	case FASTRPC_IOCTL_GETINFO:
-	    K_COPY_FROM_USER(err, 0, &info, param, sizeof(info));
+		K_COPY_FROM_USER(err, 0, &info, param, sizeof(info));
 		if (err)
 			goto bail;
 		VERIFY(err, 0 == (err = fastrpc_get_info(fl, &info)));
@@ -4801,7 +4799,7 @@ static long fastrpc_device_ioctl(struct file *file, unsigned int ioctl_num,
 		err = -ENOTTY;
 		break;
 	}
- bail:
+bail:
 	return err;
 }
 
@@ -5003,7 +5001,7 @@ static int fastrpc_cb_probe(struct device *dev)
 	uint32_t dma_addr_pool[2] = {0, 0};
 
 	VERIFY(err, NULL != (name = of_get_property(dev->of_node,
-					 "label", NULL)));
+					"label", NULL)));
 	if (err)
 		goto bail;
 
@@ -5097,7 +5095,7 @@ static int fastrpc_cb_legacy_probe(struct device *dev)
 
 
 	VERIFY(err, NULL != (name = of_get_property(dev->of_node,
-					 "label", NULL)));
+					"label", NULL)));
 	if (err)
 		goto bail;
 
@@ -5180,7 +5178,7 @@ static void init_secure_vmid_list(struct device *dev, char *prop_name,
 	if (err)
 		goto bail;
 	VERIFY(err, NULL != (rhvmpermlist = kcalloc(len, sizeof(u32),
-					 GFP_KERNEL)));
+					GFP_KERNEL)));
 	if (err)
 		goto bail;
 	for (i = 0; i < len; i++) {
@@ -5217,7 +5215,7 @@ static void init_qos_cores_list(struct device *dev, char *prop_name,
 		goto bail;
 	len /= sizeof(u32);
 	VERIFY(err, NULL != (coreslist = kcalloc(len, sizeof(u32),
-						 GFP_KERNEL)));
+						GFP_KERNEL)));
 	if (err)
 		goto bail;
 	for (i = 0; i < len; i++) {
@@ -5225,7 +5223,7 @@ static void init_qos_cores_list(struct device *dev, char *prop_name,
 								&coreslist[i]);
 		if (err) {
 			pr_err("adsprpc: %s: failed to read QOS cores list\n",
-								 __func__);
+								__func__);
 			goto bail;
 		}
 	}
@@ -5242,12 +5240,12 @@ static void configure_secure_channels(uint32_t secure_domains)
 	struct fastrpc_apps *me = &gfa;
 	int ii = 0;
 	/*
-	 * secure_domains contains the bitmask of the secure channels
-	 *  Bit 0 - ADSP
-	 *  Bit 1 - MDSP
-	 *  Bit 2 - SLPI
-	 *  Bit 3 - CDSP
-	 */
+	* secure_domains contains the bitmask of the secure channels
+	*  Bit 0 - ADSP
+	*  Bit 1 - MDSP
+	*  Bit 2 - SLPI
+	*  Bit 3 - CDSP
+	*/
 	for (ii = ADSP_DOMAIN_ID; ii <= CDSP_DOMAIN_ID; ++ii) {
 		int secure = (secure_domains >> ii) & 0x01;
 
@@ -5282,8 +5280,8 @@ static int fastrpc_probe(struct platform_device *pdev)
 		if (of_get_property(dev->of_node,
 			"qcom,secure-domains", NULL) != NULL) {
 			VERIFY(err, !of_property_read_u32(dev->of_node,
-					  "qcom,secure-domains",
-			      &secure_domains));
+					"qcom,secure-domains",
+				&secure_domains));
 			if (!err)
 				configure_secure_channels(secure_domains);
 			else
@@ -5320,7 +5318,7 @@ static int fastrpc_probe(struct platform_device *pdev)
 			}
 		}
 		if (range.addr && !of_property_read_bool(dev->of_node,
-							 "restrict-access")) {
+							"restrict-access")) {
 			int srcVM[1] = {VMID_HLOS};
 			int destVM[4] = {VMID_HLOS, VMID_MSS_MSA, VMID_SSC_Q6,
 						VMID_ADSP_Q6};
@@ -5408,8 +5406,8 @@ static int fastrpc_probe(struct platform_device *pdev)
 	}
 spdbail:
 	err = of_platform_populate(pdev->dev.of_node,
-					  fastrpc_match_table,
-					  NULL, &pdev->dev);
+					fastrpc_match_table,
+					NULL, &pdev->dev);
 	if (err)
 		goto bail;
 bail:
@@ -5473,8 +5471,10 @@ static int __init fastrpc_device_init(void)
 
 	debugfs_root = debugfs_create_dir("adsprpc", NULL);
 	if (IS_ERR_OR_NULL(debugfs_root)) {
+#ifdef CONFIG_DEBUG_FS
 		pr_warn("Error: %s: %s: failed to create debugfs root dir\n",
 			current->comm, __func__);
+#endif
 		debugfs_remove_recursive(debugfs_root);
 		debugfs_root = NULL;
 	}
@@ -5502,9 +5502,9 @@ static int __init fastrpc_device_init(void)
 	me->compat = (fops.compat_ioctl == NULL) ? 0 : 1;
 
 	/*
-	 * Create devices and register with sysfs
-	 * Create first device with minor number 0
-	 */
+	* Create devices and register with sysfs
+	* Create first device with minor number 0
+	*/
 	dev = device_create(me->class, NULL,
 				MKDEV(MAJOR(me->dev_no), MINOR_NUM_DEV),
 				NULL, DEVICE_NAME);
@@ -5552,11 +5552,11 @@ static int __init fastrpc_device_init(void)
 	me->rpmsg_register = 1;
 
 	fastrpc_register_wakeup_source(me->non_secure_dev,
-				       FASTRPC_NON_SECURE_WAKE_SOURCE_CLIENT_NAME,
-				       &me->wake_source);
+						FASTRPC_NON_SECURE_WAKE_SOURCE_CLIENT_NAME,
+						&me->wake_source);
 	fastrpc_register_wakeup_source(me->secure_dev,
-				       FASTRPC_SECURE_WAKE_SOURCE_CLIENT_NAME,
-				       &me->wake_source_secure);
+						FASTRPC_SECURE_WAKE_SOURCE_CLIENT_NAME,
+						&me->wake_source_secure);
 
 	return 0;
 device_create_bail:
@@ -5570,7 +5570,7 @@ device_create_bail:
 						MINOR_NUM_DEV));
 	if (!IS_ERR_OR_NULL(secure_dev))
 		device_destroy(me->class, MKDEV(MAJOR(me->dev_no),
-						 MINOR_NUM_SECURE_DEV));
+						MINOR_NUM_SECURE_DEV));
 	class_destroy(me->class);
 class_create_bail:
 	cdev_del(&me->cdev);
@@ -5601,7 +5601,7 @@ static void __exit fastrpc_device_exit(void)
 	/* Destroy the secure and non secure devices */
 	device_destroy(me->class, MKDEV(MAJOR(me->dev_no), MINOR_NUM_DEV));
 	device_destroy(me->class, MKDEV(MAJOR(me->dev_no),
-					 MINOR_NUM_SECURE_DEV));
+					MINOR_NUM_SECURE_DEV));
 
 	class_destroy(me->class);
 	cdev_del(&me->cdev);

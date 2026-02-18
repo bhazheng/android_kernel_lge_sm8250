@@ -1264,6 +1264,7 @@ void set_iounmap_nonlazy(void)
 static bool __purge_vmap_area_lazy(unsigned long start, unsigned long end)
 {
 	unsigned long resched_threshold;
+	unsigned long nr_purged_pages = 0;
 	struct llist_node *valist;
 	struct vmap_area *va;
 	struct vmap_area *n_va;
@@ -1297,11 +1298,14 @@ static bool __purge_vmap_area_lazy(unsigned long start, unsigned long end)
 		unsigned long nr = (va->va_end - va->va_start) >> PAGE_SHIFT;
 
 		__free_vmap_area(va);
-		atomic_long_sub(nr, &vmap_lazy_nr);
+		nr_purged_pages += nr;
 
 		if (atomic_long_read(&vmap_lazy_nr) < resched_threshold)
 			cond_resched_lock(&vmap_area_lock);
 	}
+
+	atomic_long_sub(nr_purged_pages, &vmap_lazy_nr);
+
 	spin_unlock(&vmap_area_lock);
 	return true;
 }
@@ -2419,7 +2423,7 @@ void *vmap(struct page **pages, unsigned int count,
 
 	might_sleep();
 
-	if (count > totalram_pages)
+	if (count > totalram_pages())
 		return NULL;
 
 	size = (unsigned long)count << PAGE_SHIFT;
@@ -2525,7 +2529,7 @@ void *__vmalloc_node_range(unsigned long size, unsigned long align,
 	unsigned long real_size = size;
 
 	size = PAGE_ALIGN(size);
-	if (!size || (size >> PAGE_SHIFT) > totalram_pages)
+	if (!size || (size >> PAGE_SHIFT) > totalram_pages())
 		goto fail;
 
 	area = __get_vm_area_node(size, align, VM_ALLOC | VM_UNINITIALIZED |

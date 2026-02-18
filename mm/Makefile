@@ -22,11 +22,12 @@ KCOV_INSTRUMENT_mmzone.o := n
 KCOV_INSTRUMENT_vmstat.o := n
 
 mmu-y			:= nommu.o
-mmu-$(CONFIG_MMU)	:= gup.o highmem.o memory.o mincore.o \
+mmu-$(CONFIG_MMU)	:= gup.o memory.o mincore.o \
 			   mlock.o mmap.o mmu_gather.o mprotect.o mremap.o \
 			   msync.o page_vma_mapped.o pagewalk.o \
 			   pgtable-generic.o rmap.o vmalloc.o
 
+mmu-$(CONFIG_HIGHMEM)	+= highmem.o
 
 ifdef CONFIG_MM_EVENT_STAT
 mmu-$(CONFIG_MMU)	+= mm_event.o
@@ -42,7 +43,9 @@ obj-y			:= filemap.o mempool.o oom_kill.o fadvise.o \
 			   mm_init.o mmu_context.o percpu.o slab_common.o \
 			   compaction.o vmacache.o \
 			   interval_tree.o list_lru.o workingset.o \
-			   debug.o $(mmu-y) showmem.o vmpressure.o
+			   $(mmu-y) showmem.o vmpressure.o
+
+obj-$(CONFIG_DEBUG_KERNEL)	+= debug.o
 
 obj-y += init-mm.o
 
@@ -108,4 +111,5 @@ obj-$(CONFIG_HARDENED_USERCOPY) += usercopy.o
 obj-$(CONFIG_PERCPU_STATS) += percpu-stats.o
 obj-$(CONFIG_HMM) += hmm.o
 obj-$(CONFIG_MEMFD_CREATE) += memfd.o
-obj-$(CONFIG_PROCESS_RECLAIM)	+= process_reclaim.o
+
+CFLAGS_kmemleak.o += -DCONFIG_DEBUG_FS

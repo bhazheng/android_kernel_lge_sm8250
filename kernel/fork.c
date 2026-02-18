@@ -96,6 +96,7 @@
 #include <linux/simple_lmk.h>
 #include <linux/cpufreq_times.h>
 #include <linux/scs.h>
+#include <linux/devfreq_boost.h>
 
 #include <linux/pgtable.h>
 #include <asm/pgalloc.h>
@@ -717,15 +718,16 @@ void __init __weak arch_task_cache_init(void) { }
 static void set_max_threads(unsigned int max_threads_suggested)
 {
 	u64 threads;
+	unsigned long nr_pages = totalram_pages();
 
 	/*
 	 * The number of threads shall be limited such that the thread
 	 * structures may only consume a small part of the available memory.
 	 */
-	if (fls64(totalram_pages) + fls64(PAGE_SIZE) > 64)
+	if (fls64(nr_pages) + fls64(PAGE_SIZE) > 64)
 		threads = MAX_THREADS;
 	else
-		threads = div64_u64((u64) totalram_pages * (u64) PAGE_SIZE,
+		threads = div64_u64((u64) nr_pages * (u64) PAGE_SIZE,
 				    (u64) THREAD_SIZE * 8UL);
 
 	if (threads > max_threads_suggested)
@@ -2338,6 +2340,10 @@ long _do_fork(unsigned long clone_flags,
 	int trace = 0;
 	long nr;
 
+	if (task_is_zygote(current)) {
+		devfreq_boost_kick_max(DEVFREQ_CPU_LLCC_DDR_BW, 150);
+	}
+
 	/*
 	 * Determine whether and which event to report to ptracer.  When
 	 * called from kernel_thread or CLONE_UNTRACED is explicitly
@@ -2362,8 +2368,6 @@ long _do_fork(unsigned long clone_flags,
 
 	if (IS_ERR(p))
 		return PTR_ERR(p);
-
-	cpufreq_task_times_alloc(p);
 
 	/*
 	 * Do this prior waking up the new thread - the thread pointer

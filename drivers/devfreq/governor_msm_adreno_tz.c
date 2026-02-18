@@ -13,6 +13,7 @@
 #include <linux/mm.h>
 #include <linux/msm_adreno_devfreq.h>
 #include <asm/cacheflush.h>
+#include <drm/drm_refresh_rate.h>
 #include <soc/qcom/scm.h>
 #include <soc/qcom/qtee_shmbridge.h>
 #include <linux/of_platform.h>
@@ -368,6 +369,7 @@ static int tz_get_target_freq(struct devfreq *devfreq, unsigned long *freq)
 	int val, level = 0;
 	unsigned int scm_data[4];
 	int context_count = 0;
+	unsigned int refresh_rate = dsi_panel_get_refresh_rate();
 
 	/* keeps stats.private_data == NULL   */
 	result = devfreq_update_stats(devfreq);
@@ -378,6 +380,12 @@ static int tz_get_target_freq(struct devfreq *devfreq, unsigned long *freq)
 
 	*freq = stats->current_frequency;
 	priv->bin.total_time += stats->total_time;
+	if (refresh_rate > 60 && (unsigned int)(priv->bin.busy_time + stats->busy_time) >= FLOOR) {
+		/* inflate the busy_time by 10% */
+		priv->bin.busy_time += stats->busy_time *  11 / 10;
+	} else {
+		priv->bin.busy_time += stats->busy_time;
+	}
 	priv->bin.busy_time += stats->busy_time;
 
 	if (stats->private_data)
@@ -389,11 +397,12 @@ static int tz_get_target_freq(struct devfreq *devfreq, unsigned long *freq)
 	 * Do not waste CPU cycles running this algorithm if
 	 * the GPU just started, or if less than FLOOR time
 	 * has passed since the last run or the gpu hasn't been
-	 * busier than MIN_BUSY.
+	 * busier than MIN_BUSY or there is only 1 power level
 	 */
 	if ((stats->total_time == 0) ||
 		(priv->bin.total_time < FLOOR) ||
-		(unsigned int) priv->bin.busy_time < MIN_BUSY) {
+		(unsigned int) priv->bin.busy_time < MIN_BUSY ||
+		devfreq->profile->max_state == 1) {
 		return 0;
 	}
 
